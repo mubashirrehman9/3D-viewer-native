@@ -20,7 +20,7 @@ import {SceneLoader} from '@babylonjs/core/Loading/sceneLoader';
 import '@babylonjs/loaders/glTF';
 import {WebXRSessionManager, WebXRTrackingState} from '@babylonjs/core/XR';
 import {EngineView, useEngine} from '@babylonjs/react-native';
-import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4,BoundingInfo } from '@babylonjs/core';
+import { FreeCamera, HemisphericLight, MeshBuilder, Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4,BoundingInfo } from '@babylonjs/core';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 
 
@@ -129,9 +129,9 @@ const App = () => {
       scene.lights[0].intensity = 2;
       scene.lights[0].shadowEnabled = true;
       const box = Mesh.CreateIcoSphere("box",{radius:0.2}, scene);
-      // const plane = Mesh.CreateGround("ground",10,10,10,scene)
-      // plane.position.y = -0.15;
-      // plane.receiveShadows = true;
+      const plane = Mesh.CreateGround("ground",10,10,10,scene)
+      plane.position.y = -0.15;
+      plane.receiveShadows = true;
       const mat = new PBRMetallicRoughnessMaterial("mat", scene);
       mat.metallic = 1;
       mat.roughness = 0.5;
