@@ -10,6 +10,7 @@ import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 var positionGizmo: PositionGizmo
 var rotationgizmo: RotationGizmo
 var tmodel: AbstractMesh;
+var elk_model: AbstractMesh;
 
 
 const App = () => {
@@ -40,6 +41,7 @@ const App = () => {
       buttonText = 'Toggle 2';
       if (tmodel) {
         positionGizmo.attachedMesh = tmodel;
+        positionGizmo.attachedMesh = elk_model;
         rotationgizmo.attachedMesh = null;
       }
       break;
@@ -48,6 +50,7 @@ const App = () => {
       if (tmodel) {
         positionGizmo.attachedMesh = null;
         rotationgizmo.attachedMesh = tmodel;
+        rotationgizmo.attachedMesh = elk_model;
       }
       break;
   }
@@ -80,37 +83,37 @@ const App = () => {
       utilLayer.utilityLayerScene.autoClearDepthAndStencil = false;
       positionGizmo = new PositionGizmo(utilLayer);
       rotationgizmo = new RotationGizmo(utilLayer);
-
       SceneLoader.Append("https://shed-happens.s3.us-east-2.amazonaws.com/5/b092b50b-bffe-4190-b665-4257b8b65d8f-2023-04-09-10-35-20-862307/android/", "texturedMesh.gltf", scene,
-        function (scene) {
-          tmodel = scene.meshes[2];
+      function (scene) {
+        tmodel = scene.meshes[2];
 
-          // Keep the gizmo fixed to world rotation
+        positionGizmo.updateGizmoRotationToMatchAttachedMesh = false;
+        positionGizmo.updateGizmoPositionToMatchAttachedMesh = true;
+
+        var sixDofDragBehavior = new SixDofDragBehavior()
+        tmodel.addBehavior(sixDofDragBehavior)
+
+        rotationgizmo.updateGizmoRotationToMatchAttachedMesh = false;
+        rotationgizmo.updateGizmoPositionToMatchAttachedMesh = true;
+      })
+      SceneLoader.Append("http://192.168.0.185:5500/little_buck_2.0/","scene.gltf", scene,
+        function (elk) {
+          elk_model = elk.meshes[2];
+
           positionGizmo.updateGizmoRotationToMatchAttachedMesh = false;
           positionGizmo.updateGizmoPositionToMatchAttachedMesh = true;
 
-          // Create behaviors to drag and scale with pointers in VR
           var sixDofDragBehavior = new SixDofDragBehavior()
-          tmodel.addBehavior(sixDofDragBehavior)
+          elk_model.addBehavior(sixDofDragBehavior)
 
-          // positionGizmo.attachedMesh = tmodel;
-          // rotationgizmo.attachedMesh = tmodel;
-
-          // Keep the gizmo fixed to world rotation
           rotationgizmo.updateGizmoRotationToMatchAttachedMesh = false;
           rotationgizmo.updateGizmoPositionToMatchAttachedMesh = true;
-
-          // var multiPointerScaleBehavior = new MultiPointerScaleBehavior()
-          // tmodel.addBehavior(multiPointerScaleBehavior)
-
-
-          // scene.materials[2].convertToFlatShadedMesh()
         })
       scene.beforeRender = function () {
         if (tmodel) {
           box.setEnabled(false);
 
-          tmodel.rotate(Vector3.Left(), 0.001 * scene.getAnimationRatio());
+          // tmodel.rotate(Vector3.Left(), 0.001 * scene.getAnimationRatio());
         } else {
           box.rotate(Vector3.Up(), 0.01 * scene.getAnimationRatio());
         }
