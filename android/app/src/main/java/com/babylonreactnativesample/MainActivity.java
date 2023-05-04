@@ -4,6 +4,8 @@ import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.ReactRootView;
 
+// import com.rnfs.RNFSPackage;
+
 public class MainActivity extends ReactActivity {
 
   /**
@@ -15,6 +17,25 @@ public class MainActivity extends ReactActivity {
     return "BabylonReactNativeSample";
   }
 
+  // @Override
+  // protected void onCreate(Bundle savedInstanceState) {
+  //   super.onCreate(savedInstanceState);
+  //   mReactRootView = new ReactRootView(this);
+
+  //   mReactInstanceManager = ReactInstanceManager.builder()
+  //     .setApplication(getApplication())
+  //     .setBundleAssetName("index.android.bundle")
+  //     .setJSMainModuleName("index.android")
+  //     .addPackage(new MainReactPackage())
+  //     .addPackage(new RNFSPackage())      // <------- add package
+  //     .setUseDeveloperSupport(BuildConfig.DEBUG)
+  //     .setInitialLifecycleState(LifecycleState.RESUMED)
+  //     .build();
+
+  //   mReactRootView.startReactApplication(mReactInstanceManager, "ExampleRN", null);
+
+  //   setContentView(mReactRootView);
+  // }
   /**
    * Returns the instance of the {@link ReactActivityDelegate}. There the RootView is created and
    * you can specify the renderer you wish to use - the new renderer (Fabric) or the old renderer

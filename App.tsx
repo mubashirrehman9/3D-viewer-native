@@ -3,9 +3,10 @@ import { Button, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, Vi
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import '@babylonjs/loaders/glTF';
 import { EngineView, useEngine } from '@babylonjs/react-native';
-import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, Material, Nullable, UtilityLayerRenderer, BoundingBoxGizmo, SixDofDragBehavior, MultiPointerScaleBehavior, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo } from '@babylonjs/core';
+import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, Material, Nullable, UtilityLayerRenderer, BoundingBoxGizmo, SixDofDragBehavior, MultiPointerScaleBehavior, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo, SceneSerializer, AssetsManager, MeshAssetTask } from '@babylonjs/core';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 // import { WebXRSessionManager, WebXRTrackingState } from '@babylonjs/core/XR';
+import RNFS from 'react-native-fs';
 
 var positionGizmo: PositionGizmo
 var rotationgizmo: RotationGizmo
@@ -14,6 +15,7 @@ var tmodel: AbstractMesh;
 var elk_model: AbstractMesh;
 var left_node: AbstractMesh;
 var right_node: AbstractMesh;
+var scene: Scene;
 
 
 const App = () => {
@@ -44,6 +46,44 @@ const App = () => {
         console.log("poko")
       }
     }
+  }
+
+
+  function saveScene(filename: string, scene: Scene) {
+    var serializedScene = SceneSerializer.Serialize(scene);
+    var strMesh = JSON.stringify(serializedScene);
+    if (filename.toLowerCase().lastIndexOf(".babylon") !== filename.length - 8 || filename.length < 9) {
+      filename += ".babylon";
+    }
+    const filePath = `${RNFS.DownloadDirectoryPath}/${filename}`;
+    RNFS.writeFile(filePath, strMesh, 'utf8')
+
+    console.log("filePath", filePath)
+  }
+
+  function loadScene(url: string, fileName: string, scene: Scene) {
+    var loader = new AssetsManager(scene);
+    var loader_task: MeshAssetTask
+    fileName = 'fileName.babylon';
+    var dirPath = RNFS.DownloadDirectoryPath;
+    url = `file://${dirPath}/`;
+
+
+    loader_task = loader.addMeshTask("loader_task", "", url, fileName);
+    loader_task.onSuccess = function (task: any) {
+      for (var i in task.loadedMeshes) {
+        var mesh = task.loadedMeshes[i];
+      }
+      task.loadedMeshes.shift();
+      try {
+        var merged = Mesh.MergeMeshes(task.loadedMeshes);
+        console.log(merged);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+    loader.load();
+
   }
 
 
@@ -84,7 +124,7 @@ const App = () => {
   }
   useEffect(() => {
     if (engine) {
-      const scene = new Scene(engine);
+      scene = new Scene(engine);
       scene.clearColor = Color4.FromColor3(new Color3(0.71, 0.89, 0.91), 1);
       scene.createDefaultCamera(true, false, true);
       (scene.activeCamera as ArcRotateCamera).alpha += Math.PI;
@@ -120,7 +160,7 @@ const App = () => {
       positionGizmo = new PositionGizmo(utilLayer);
       rotationgizmo = new RotationGizmo(utilLayer);
       scalegizmo = new ScaleGizmo(utilLayer);
-      SceneLoader.Append("http://192.168.0.179:5500/antler/", "texturedMesh.gltf", scene,
+      SceneLoader.Append("http://192.168.0.220:5500/antler/", "texturedMesh.gltf", scene,
         function (scene) {
           tmodel = scene.meshes[2];
 
@@ -132,7 +172,7 @@ const App = () => {
           positionGizmo.updateGizmoRotationToMatchAttachedMesh = false;
           positionGizmo.updateGizmoPositionToMatchAttachedMesh = true;
 
-          scalegizmo.updateGizmoRotationToMatchAttachedMesh = false;
+          // scalegizmo.updateGizmoRotationToMatchAttachedMesh = false;
           scalegizmo.updateGizmoPositionToMatchAttachedMesh = true;
           // var sixDofDragBehavior = new SixDofDragBehavior()
           // tmodel.addBehavior(sixDofDragBehavior)
@@ -140,7 +180,7 @@ const App = () => {
           rotationgizmo.updateGizmoRotationToMatchAttachedMesh = false;
           rotationgizmo.updateGizmoPositionToMatchAttachedMesh = true;
         })
-      SceneLoader.Append("http://192.168.0.179:5500/Antler1/", "deer.gltf", scene,
+      SceneLoader.Append("http://192.168.0.220:5500/Antler1/", "deer.gltf", scene,
         function (elk) {
           elk_model = elk.meshes[2];
           right_node = elk.meshes[5];
@@ -187,6 +227,13 @@ const App = () => {
       <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
         <EngineView style={{ flex: 1 }} camera={camera} />
       </SafeAreaView>
+      <View>
+        <TouchableOpacity style={styles.button}
+          onPress={() => { loadScene("abc", "abc", scene) }}
+        >
+          <Text style={styles.buttonText}>Load</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.container}>
         <TouchableOpacity style={styles.button} onPress={() => { updateAntlerPosition("left") }}>
           <Text style={styles.buttonText}>Left</Text>
@@ -197,6 +244,10 @@ const App = () => {
         <TouchableOpacity style={styles.button} onPress={() => { updateAntlerPosition("right") }}>
           <Text style={styles.buttonText}>Right</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => { saveScene("fileName", scene) }}>
+          <Text style={styles.buttonText}>Save</Text>
+        </TouchableOpacity>
+
       </View>
     </View>
   );
@@ -285,3 +336,56 @@ const styles = StyleSheet.create({
   //     }
   //   })();
   // }, [scene, xrSession]);
+
+
+
+
+
+
+//   const createScene = function () {
+//     // This creates a basic Babylon Scene object (non-mesh)
+//     const scene = new BABYLON.Scene(engine);
+
+//     // This creates and positions a free camera (non-mesh)
+//     const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+
+//     // This targets the camera to scene origin
+//     camera.setTarget(BABYLON.Vector3.Zero());
+
+//     // This attaches the camera to the canvas
+//     camera.attachControl(canvas, true);
+
+//     // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+//     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+//     // Default intensity is 1. Let's dim the light a small amount
+//     light.intensity = 0.7;
+
+//     // Our built-in 'sphere' shape.
+//     const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 2, segments: 32}, scene);
+
+//     // Move the sphere upward 1/2 its height
+//     sphere.position.y = 1;
+
+//     // Our built-in 'ground' shape.
+//     const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
+
+//     // Export the scene as a GLTF file
+//     BABYLON.GLTF2Export.GLTFAsync(scene, "mymodel.gltf").then((glb) => {
+//         console.log("GLTF export succeeded.");
+
+//         // Create a download link for the GLTF file
+//         var blob = new Blob([glb], { type: "application/octet-stream" });
+//         var url = URL.createObjectURL(blob);
+
+//         var link = document.createElement("a");
+//         link.href = url;
+//         link.download = "mymodel.gltf";
+//         link.click();
+//     }).catch((error) => {
+//         console.log("GLTF export failed: " + error.message);
+//     });
+
+//     return scene;
+// };
+

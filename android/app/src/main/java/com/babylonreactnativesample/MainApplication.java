@@ -13,6 +13,8 @@ import com.babylonreactnativesample.newarchitecture.MainApplicationReactNativeHo
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
+import com.rnfs.RNFSPackage;
+
 public class MainApplication extends Application implements ReactApplication {
 
   private final ReactNativeHost mReactNativeHost =
@@ -31,6 +33,7 @@ public class MainApplication extends Application implements ReactApplication {
           return packages;
         }
 
+ 
         @Override
         protected String getJSMainModuleName() {
           return "index";
