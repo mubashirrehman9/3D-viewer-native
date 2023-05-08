@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Button, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Button, Modal, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import '@babylonjs/loaders/glTF';
 import { EngineView, useEngine } from '@babylonjs/react-native';
-import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, Material, Nullable, UtilityLayerRenderer, BoundingBoxGizmo, SixDofDragBehavior, MultiPointerScaleBehavior, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo, SceneSerializer, AssetsManager, MeshAssetTask } from '@babylonjs/core';
+import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, Material, Nullable, UtilityLayerRenderer, BoundingBoxGizmo, SixDofDragBehavior, MultiPointerScaleBehavior, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo, SceneSerializer, AssetsManager, MeshAssetTask, GUID } from '@babylonjs/core';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 // import { WebXRSessionManager, WebXRTrackingState } from '@babylonjs/core/XR';
 import RNFS from 'react-native-fs';
@@ -21,6 +21,9 @@ var scene: Scene;
 const App = () => {
   const engine = useEngine();
   const [camera, setCamera] = useState<Camera>();
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const [isEnabled, setIsEnabled] = useState(false);
 
   const [buttonState, setButtonState] = useState<number>(0);
 
@@ -222,18 +225,45 @@ const App = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar barStyle="dark-content" />
+      < StatusBar barStyle="dark-content" />
       {/* <Button title='Toggle Gizmo' /> */}
-      <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+      < SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
         <EngineView style={{ flex: 1 }} camera={camera} />
-      </SafeAreaView>
-      <View>
-        <TouchableOpacity style={styles.button}
-          onPress={() => { loadScene("abc", "abc", scene) }}
-        >
-          <Text style={styles.buttonText}>Load</Text>
-        </TouchableOpacity>
-      </View>
+      </SafeAreaView >
+
+
+      < View style={styles.centeredView} >
+
+        < View style={styles.modalView} >
+          <Text style={{ color: "black" }}>Rotation</Text>
+
+          <View style={{ flexDirection: "row", width: 100, height: 60 }}>
+            <Text style={{ marginTop: 20, color: "black" }}>X=</Text>
+            <TextInput placeholder='X' style={{ margin: 10, backgroundColor: "white" }} />
+            <Text style={{ marginTop: 20, color: "black" }}>Y=</Text>
+            <TextInput placeholder='Y' style={{ margin: 10, backgroundColor: "white" }} />
+            <Text style={{ marginTop: 20, color: "black" }}>Z=</Text>
+            <TextInput placeholder='Z' style={{ margin: 10, backgroundColor: "white" }} />
+            <View />
+          </View>
+
+
+          <View style={styles.BtnSet}>
+
+            <TouchableOpacity>
+              <Text style={styles.btnText}>OK</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity>
+              <Text style={styles.btnText}>Cancel</Text>
+            </TouchableOpacity>
+
+          </View>
+
+        </View >
+
+      </View >
+
       <View style={styles.container}>
         <TouchableOpacity style={styles.button} onPress={() => { updateAntlerPosition("left") }}>
           <Text style={styles.buttonText}>Left</Text>
@@ -247,29 +277,58 @@ const App = () => {
         <TouchableOpacity style={styles.button} onPress={() => { saveScene("fileName", scene) }}>
           <Text style={styles.buttonText}>Save</Text>
         </TouchableOpacity>
-
+        <TouchableOpacity style={styles.button}
+          onPress={() => { loadScene("abc", "abc", scene) }}
+        >
+          <Text style={styles.buttonText}>Load</Text>
+        </TouchableOpacity>
       </View>
-    </View>
+    </View >
   );
 };
 export default App;
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
-    margin: 20,
-    display: "flex",
-    flexDirection: "row"
+    flexDirection: "row",
+    padding: 10,
+    marginLeft: 20,
   },
   button: {
     backgroundColor: "#ddd",
     padding: 10,
     borderRadius: 5,
-    width: "30%"
   },
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
   },
+  centeredView: {
+    marginTop: 25,
+    width: "100%",
+    position: "absolute",
+    alignItems: "flex-end",
+  },
+  modalView: {
+    width: "60%",
+    backgroundColor: 'rgba(255, 255, 205, 1)',
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  BtnSet: {
+    flexDirection: "row",
+    justifyContent: "space-evenly"
+  },
+  btnText: {
+    color: "black",
+    justifyContent: "space-evenly"
+  }
 });
 
 
