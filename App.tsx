@@ -16,13 +16,15 @@ var elk_model: AbstractMesh;
 var left_node: AbstractMesh;
 var right_node: AbstractMesh;
 var scene: Scene;
-
+var currentTransformingDeltas: string;
+var currentTransformingX: number;
+var currentTransformingY: number;
+var currentTransformingZ: number;
 
 const App = () => {
   const engine = useEngine();
   const [camera, setCamera] = useState<Camera>();
   const [modalVisible, setModalVisible] = useState(false);
-
   const [isEnabled, setIsEnabled] = useState(false);
 
   const [buttonState, setButtonState] = useState<number>(0);
@@ -49,6 +51,13 @@ const App = () => {
         console.log("poko")
       }
     }
+  }
+
+  const applyTransform = (transform:number, transformimgDeltas:Vector3)=>{
+    // transform = 0 ======> Position
+    // transform = 1 ======> Rotation
+    // transform = 2 ======> Scale
+    console.log(transform + "===>"+ transformimgDeltas);
   }
 
 
@@ -94,6 +103,7 @@ const App = () => {
   switch (buttonState) {
     case 0:
       buttonText = 'Toggle 1';
+      currentTransformingDeltas = '';
       if (tmodel) {
         positionGizmo.attachedMesh = null;
         rotationgizmo.attachedMesh = null;
@@ -102,25 +112,37 @@ const App = () => {
       break;
     case 1:
       buttonText = 'Toggle 2';
+      currentTransformingDeltas = 'Position';
       if (tmodel) {
         positionGizmo.attachedMesh = tmodel;
+        currentTransformingX = tmodel.position.x
+        currentTransformingY = tmodel.position.y
+        currentTransformingZ = tmodel.position.z
         rotationgizmo.attachedMesh = null;
         scalegizmo.attachedMesh = null;
       }
       break;
     case 2:
       buttonText = 'Toggle 3';
+      currentTransformingDeltas = 'Rotation';
       if (tmodel) {
         positionGizmo.attachedMesh = null;
         rotationgizmo.attachedMesh = tmodel;
+        currentTransformingX = tmodel.rotation.x
+        currentTransformingY = tmodel.rotation.y
+        currentTransformingZ = tmodel.rotation.z
         scalegizmo.attachedMesh = null
       }
       break;
     case 3:
       buttonText = 'Toggle 4';
+      currentTransformingDeltas = 'Scale';
       if (tmodel) {
         positionGizmo.attachedMesh = null;
         rotationgizmo.attachedMesh = null;
+        currentTransformingX = tmodel.scaling.x
+        currentTransformingY = tmodel.scaling.y
+        currentTransformingZ = tmodel.scaling.z
         scalegizmo.attachedMesh = tmodel;
       }
       break;
@@ -235,15 +257,20 @@ const App = () => {
       < View style={styles.centeredView} >
 
         < View style={styles.modalView} >
-          <Text style={{ color: "black" }}>Rotation</Text>
-
+          <Text style={{ color: "black" }}>{currentTransformingDeltas}</Text>
           <View style={{ flexDirection: "row", width: 100, height: 60 }}>
             <Text style={{ marginTop: 20, color: "black" }}>X=</Text>
-            <TextInput placeholder='X' style={{ margin: 10, backgroundColor: "white" }} />
+            <TextInput placeholder='X' style={{ margin: 10, backgroundColor: "white" }}
+            value={currentTransformingX.toString()} 
+            keyboardType="numeric" />
             <Text style={{ marginTop: 20, color: "black" }}>Y=</Text>
-            <TextInput placeholder='Y' style={{ margin: 10, backgroundColor: "white" }} />
+            <TextInput placeholder='Y' style={{ margin: 10, backgroundColor: "white" }}
+            value={currentTransformingY.toString()}
+            keyboardType="numeric" />
             <Text style={{ marginTop: 20, color: "black" }}>Z=</Text>
-            <TextInput placeholder='Z' style={{ margin: 10, backgroundColor: "white" }} />
+            <TextInput placeholder='Z' style={{ margin: 10, backgroundColor: "white" }}
+            value={currentTransformingZ.toString()}
+            keyboardType="numeric" />
             <View />
           </View>
 
