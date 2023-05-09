@@ -20,14 +20,15 @@ var currentTransformingDeltas: string;
 var currentTransformingX: number;
 var currentTransformingY: number;
 var currentTransformingZ: number;
+var transformType: number;
+
+var tempTransform: Vector3;
 
 const App = () => {
   const engine = useEngine();
   const [camera, setCamera] = useState<Camera>();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [isEnabled, setIsEnabled] = useState(false);
-
   const [buttonState, setButtonState] = useState<number>(0);
+  const [objectPosition, setObjectPostion] = useState<{ x: number, y: number, z: number }>({ x: 0, y: 0, z: 0 })
 
   const handlePress = () => {
     let newState = buttonState + 1;
@@ -53,13 +54,52 @@ const App = () => {
     }
   }
 
-  const applyTransform = (transform:number, transformimgDeltas:Vector3)=>{
+  const applyTransform = (transform: number, transformimgDeltas: Vector3) => {
     // transform = 0 ======> Position
     // transform = 1 ======> Rotation
     // transform = 2 ======> Scale
-    console.log(transform + "===>"+ transformimgDeltas);
+    console.log(transform + "===>" + transformimgDeltas);
   }
+  const setTransformingDeltas = (transform: number) => {
+    if (tmodel) {
+      switch (transform) {
+        case 0:
+          currentTransformingX = tmodel.position.x
+          currentTransformingY = tmodel.position.y
+          currentTransformingZ = tmodel.position.z
+          setObjectPostion({
+            x: currentTransformingX,
+            y: currentTransformingY,
+            z: currentTransformingZ
+          })
+          break;
+        case 1:
+          currentTransformingX = tmodel.rotation.x
+          currentTransformingY = tmodel.rotation.y
+          currentTransformingZ = tmodel.rotation.z
+          setObjectPostion({
+            x: currentTransformingX,
+            y: currentTransformingY,
+            z: currentTransformingZ
+          })
+          console.log(tmodel.parent)
+          break;
+        case 2:
+          currentTransformingX = tmodel.scaling.x
+          currentTransformingY = tmodel.scaling.y
+          currentTransformingZ = tmodel.scaling.z
+          setObjectPostion({
+            x: currentTransformingX,
+            y: currentTransformingY,
+            z: currentTransformingZ
+          })
+          break;
+        default:
+          break;
+      }
+    }
 
+  };
 
   function saveScene(filename: string, scene: Scene) {
     var serializedScene = SceneSerializer.Serialize(scene);
@@ -103,7 +143,9 @@ const App = () => {
   switch (buttonState) {
     case 0:
       buttonText = 'Toggle 1';
+      // styles.modalView.display = "flex";
       currentTransformingDeltas = '';
+      transformType = 9;
       if (tmodel) {
         positionGizmo.attachedMesh = null;
         rotationgizmo.attachedMesh = null;
@@ -113,11 +155,9 @@ const App = () => {
     case 1:
       buttonText = 'Toggle 2';
       currentTransformingDeltas = 'Position';
+      transformType = 0;
       if (tmodel) {
         positionGizmo.attachedMesh = tmodel;
-        currentTransformingX = tmodel.position.x
-        currentTransformingY = tmodel.position.y
-        currentTransformingZ = tmodel.position.z
         rotationgizmo.attachedMesh = null;
         scalegizmo.attachedMesh = null;
       }
@@ -125,24 +165,20 @@ const App = () => {
     case 2:
       buttonText = 'Toggle 3';
       currentTransformingDeltas = 'Rotation';
+      transformType = 1;
       if (tmodel) {
         positionGizmo.attachedMesh = null;
         rotationgizmo.attachedMesh = tmodel;
-        currentTransformingX = tmodel.rotation.x
-        currentTransformingY = tmodel.rotation.y
-        currentTransformingZ = tmodel.rotation.z
         scalegizmo.attachedMesh = null
       }
       break;
     case 3:
       buttonText = 'Toggle 4';
       currentTransformingDeltas = 'Scale';
+      transformType = 2;
       if (tmodel) {
         positionGizmo.attachedMesh = null;
         rotationgizmo.attachedMesh = null;
-        currentTransformingX = tmodel.scaling.x
-        currentTransformingY = tmodel.scaling.y
-        currentTransformingZ = tmodel.scaling.z
         scalegizmo.attachedMesh = tmodel;
       }
       break;
@@ -170,8 +206,6 @@ const App = () => {
       grounddiffuseTexture.vScale = 5.0;
       groundMat.diffuseTexture = grounddiffuseTexture;
       ground.material = groundMat;
-
-      // ground.position.y = -0.15;
       ground.receiveShadows = true;
       const mat = new PBRMetallicRoughnessMaterial("mat", scene);
       mat.metallic = 1;
@@ -185,27 +219,32 @@ const App = () => {
       positionGizmo = new PositionGizmo(utilLayer);
       rotationgizmo = new RotationGizmo(utilLayer);
       scalegizmo = new ScaleGizmo(utilLayer);
-      SceneLoader.Append("http://192.168.0.220:5500/antler/", "texturedMesh.gltf", scene,
+
+      SceneLoader.Append("http://192.168.3.120:5500/antler/", "texturedMesh.gltf", scene,
         function (scene) {
           tmodel = scene.meshes[2];
 
-          positionGizmo.scaleRatio = 2;
+          positionGizmo.scaleRatio = -2;
           rotationgizmo.scaleRatio = 2;
           scalegizmo.scaleRatio = 2;
 
+          positionGizmo.onDragEndObservable.add(() => {
+            setTransformingDeltas(transformType)
+          })
+          rotationgizmo.onDragEndObservable.add(() => {
+            setTransformingDeltas(transformType)
+          })
+          scalegizmo.onDragEndObservable.add(() => {
+            setTransformingDeltas(transformType)
+          })
 
           positionGizmo.updateGizmoRotationToMatchAttachedMesh = false;
           positionGizmo.updateGizmoPositionToMatchAttachedMesh = true;
-
-          // scalegizmo.updateGizmoRotationToMatchAttachedMesh = false;
           scalegizmo.updateGizmoPositionToMatchAttachedMesh = true;
-          // var sixDofDragBehavior = new SixDofDragBehavior()
-          // tmodel.addBehavior(sixDofDragBehavior)
-
           rotationgizmo.updateGizmoRotationToMatchAttachedMesh = false;
           rotationgizmo.updateGizmoPositionToMatchAttachedMesh = true;
         })
-      SceneLoader.Append("http://192.168.0.220:5500/Antler1/", "deer.gltf", scene,
+      SceneLoader.Append("http://192.168.3.120:5500/Antler1/", "deer.gltf", scene,
         function (elk) {
           elk_model = elk.meshes[2];
           right_node = elk.meshes[5];
@@ -223,21 +262,10 @@ const App = () => {
               right_node = value;
             }
           })
-
-          // positionGizmo.updateGizmoRotationToMatchAttachedMesh = false;
-          // positionGizmo.updateGizmoPositionToMatchAttachedMesh = true;
-
-          // var sixDofDragBehavior = new SixDofDragBehavior()
-          // elk_model.addBehavior(sixDofDragBehavior)
-
-          // rotationgizmo.updateGizmoRotationToMatchAttachedMesh = false;
-          // rotationgizmo.updateGizmoPositionToMatchAttachedMesh = true;
         })
       scene.beforeRender = function () {
         if (tmodel) {
           box.setEnabled(false);
-
-          // tmodel.rotate(Vector3.Left(), 0.001 * scene.getAnimationRatio());
         } else {
           box.rotate(Vector3.Up(), 0.01 * scene.getAnimationRatio());
         }
@@ -248,49 +276,38 @@ const App = () => {
   return (
     <View style={{ flex: 1 }}>
       < StatusBar barStyle="dark-content" />
-      {/* <Button title='Toggle Gizmo' /> */}
       < SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
         <EngineView style={{ flex: 1 }} camera={camera} />
       </SafeAreaView >
-
-
       < View style={styles.centeredView} >
-
-        < View style={styles.modalView} >
+        < View style={transformType != 9 ? styles.modalView : { display: "none" }} >
           <Text style={{ color: "black" }}>{currentTransformingDeltas}</Text>
           <View style={{ flexDirection: "row", width: 100, height: 60 }}>
             <Text style={{ marginTop: 20, color: "black" }}>X=</Text>
-            <TextInput placeholder='X' style={{ margin: 10, backgroundColor: "white" }}
-            value={currentTransformingX.toString()} 
-            keyboardType="numeric" />
+            <TextInput placeholder='X' style={{ width: 30, margin: 10, backgroundColor: "white", color: "black" }}
+              value={objectPosition.x.toString()}
+              editable={true}
+              keyboardType="numeric" />
             <Text style={{ marginTop: 20, color: "black" }}>Y=</Text>
-            <TextInput placeholder='Y' style={{ margin: 10, backgroundColor: "white" }}
-            value={currentTransformingY.toString()}
-            keyboardType="numeric" />
+            <TextInput placeholder='Y' style={{ width: 30, margin: 10, backgroundColor: "white", color: "black" }}
+              value={objectPosition.y.toString()}
+              keyboardType="numeric" />
             <Text style={{ marginTop: 20, color: "black" }}>Z=</Text>
-            <TextInput placeholder='Z' style={{ margin: 10, backgroundColor: "white" }}
-            value={currentTransformingZ.toString()}
-            keyboardType="numeric" />
+            <TextInput placeholder='Z' style={{ width: 30, margin: 10, backgroundColor: "white", color: "black" }}
+              value={objectPosition.z.toString()}
+              keyboardType="numeric" />
             <View />
           </View>
-
-
           <View style={styles.BtnSet}>
-
             <TouchableOpacity>
               <Text style={styles.btnText}>OK</Text>
             </TouchableOpacity>
-
             <TouchableOpacity>
               <Text style={styles.btnText}>Cancel</Text>
             </TouchableOpacity>
-
           </View>
-
         </View >
-
       </View >
-
       <View style={styles.container}>
         <TouchableOpacity style={styles.button} onPress={() => { updateAntlerPosition("left") }}>
           <Text style={styles.buttonText}>Left</Text>
@@ -304,9 +321,7 @@ const App = () => {
         <TouchableOpacity style={styles.button} onPress={() => { saveScene("fileName", scene) }}>
           <Text style={styles.buttonText}>Save</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button}
-          onPress={() => { loadScene("abc", "abc", scene) }}
-        >
+        <TouchableOpacity style={styles.button} onPress={() => { loadScene("abc", "abc", scene) }}>
           <Text style={styles.buttonText}>Load</Text>
         </TouchableOpacity>
       </View>
@@ -347,6 +362,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+    display: "flex",
   },
   BtnSet: {
     flexDirection: "row",
