@@ -3,7 +3,7 @@ import { Alert, Button, Modal, SafeAreaView, StatusBar, StyleSheet, Text, TextIn
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import '@babylonjs/loaders/glTF';
 import { EngineView, useEngine } from '@babylonjs/react-native';
-import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, Material, Nullable, UtilityLayerRenderer, BoundingBoxGizmo, SixDofDragBehavior, MultiPointerScaleBehavior, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo, SceneSerializer, AssetsManager, MeshAssetTask, GUID } from '@babylonjs/core';
+import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, Material, Nullable, UtilityLayerRenderer, BoundingBoxGizmo, SixDofDragBehavior, MultiPointerScaleBehavior, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo, SceneSerializer, AssetsManager, MeshAssetTask } from '@babylonjs/core';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 // import { WebXRSessionManager, WebXRTrackingState } from '@babylonjs/core/XR';
 import RNFS from 'react-native-fs';
@@ -82,7 +82,6 @@ const App = () => {
             y: currentTransformingY,
             z: currentTransformingZ
           })
-          console.log(tmodel.parent)
           break;
         case 2:
           currentTransformingX = tmodel.scaling.x
@@ -193,11 +192,13 @@ const App = () => {
       (scene.activeCamera as ArcRotateCamera).allowUpsideDown = true;
       (scene.activeCamera as ArcRotateCamera).noRotationConstraint = true;
       (scene.activeCamera as ArcRotateCamera).useNaturalPinchZoom = true;
+      (scene.activeCamera as ArcRotateCamera).radius=20;
+      
       setCamera(scene.activeCamera!);
       scene.createDefaultLight(true);
       scene.lights[0].intensity = 2;
       scene.lights[0].shadowEnabled = true;
-      const box = Mesh.CreateIcoSphere("box", { radius: 0.2 }, scene);
+      const box = Mesh.CreateIcoSphere("box", { radius: 0.1 }, scene);
       const ground = Mesh.CreateGround("ground", 50, 50, 50, scene)
 
       var groundMat = new StandardMaterial("groundMaterial", scene);
@@ -208,10 +209,10 @@ const App = () => {
       ground.material = groundMat;
       ground.receiveShadows = true;
       const mat = new PBRMetallicRoughnessMaterial("mat", scene);
-      mat.metallic = 1;
-      mat.roughness = 0.5;
-      mat.alpha = 0.5;
-      mat.baseColor = Color3.Yellow();
+      // mat.metallic = 1;
+      // mat.roughness = 0.5;
+      // mat.alpha = 0.5;
+      // mat.baseColor = Color3.Yellow();
       mat.wireframe = true;
       box.material = mat;
       var utilLayer = new UtilityLayerRenderer(scene)
@@ -280,7 +281,7 @@ const App = () => {
         <EngineView style={{ flex: 1 }} camera={camera} />
       </SafeAreaView >
       < View style={styles.centeredView} >
-        < View style={transformType != 9 ? styles.modalView : { display: "none" }} >
+        < View style={transformType != 9 && transformType != 1 ? styles.modalView : { display: "none" }} >
           <Text style={{ color: "black" }}>{currentTransformingDeltas}</Text>
           <View style={{ flexDirection: "row", width: 100, height: 60 }}>
             <Text style={{ marginTop: 20, color: "black" }}>X=</Text>
