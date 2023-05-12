@@ -3,7 +3,7 @@ import { Alert, Button, Image, Modal, SafeAreaView, StatusBar, StyleSheet, Text,
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import '@babylonjs/loaders/glTF';
 import { EngineView, useEngine } from '@babylonjs/react-native';
-import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, UtilityLayerRenderer, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo, SceneSerializer, AssetsManager, MeshAssetTask } from '@babylonjs/core';
+import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, UtilityLayerRenderer, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo, SceneSerializer, AssetsManager, MeshAssetTask, CubeTexture, MeshBuilder } from '@babylonjs/core';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 // import { WebXRSessionManager, WebXRTrackingState } from '@babylonjs/core/XR';
 import RNFS from 'react-native-fs';
@@ -15,22 +15,30 @@ var tmodel: AbstractMesh;
 var elk_model: AbstractMesh;
 var mule_deer_model: AbstractMesh;
 var whiteTail_deer_model: AbstractMesh;
-var left_node: AbstractMesh;
-var right_node: AbstractMesh;
+var left_node1: AbstractMesh;
+var right_node1: AbstractMesh;
+var left_node2: AbstractMesh;
+var right_node2: AbstractMesh;
+var left_node3: AbstractMesh;
+var right_node3: AbstractMesh;
 var scene: Scene;
 var currentTransformingDeltas: string;
 var currentTransformingX: number;
 var currentTransformingY: number;
 var currentTransformingZ: number;
 var transformType: number;
-
-var tempTransform: Vector3;
+var MainCamera: Camera;
+var antlerViewIcon = require("./assets/textures/antler_icon.png");
+var deerViewIcon = require("./assets/textures/deer.png");
+// var tempTransform: Vector3;
 
 const App = () => {
   const engine = useEngine();
   const [camera, setCamera] = useState<Camera>();
   const [buttonState, setButtonState] = useState<number>(0);
   const [showspeciesPanel, setShowSpeciesPanel] = useState<boolean>(false);
+  const [toggleView, setToggleView] = useState<boolean>(false);
+  const [activespecies, setActiveSpecies] = useState<number>(1);
   const [objectPosition, setObjectPostion] = useState<{ x: number, y: number, z: number }>({ x: 0, y: 0, z: 0 })
 
   const handlePress = () => {
@@ -40,24 +48,44 @@ const App = () => {
     }
     setButtonState(newState);
   }
-
-  const updateAntlerPosition = (position: string) => {
+  const updateAntlerPosition = (activeSpecie: number, position: string) => {
     if (tmodel) {
-      if (position === "left") {
-        tmodel.position = left_node.position
-      } else if (position === "right") {
-        tmodel.position = right_node.position
-      } else {
+      switch (activeSpecie) {
+        case 1:
+          if (position === "left") {
+            tmodel.position = left_node1.position
+          }
+          else if (position === "right") {
+            tmodel.position = right_node1.position
+          }
+          break;
+        case 2:
+          if (position === "left") {
+            tmodel.position = left_node2.position
+          }
+          else if (position === "right") {
+            tmodel.position = right_node2.position
+          }
+          break;
+        case 3:
+          if (position === "left") {
+            tmodel.position = left_node3.position
+          }
+          else if (position === "right") {
+            tmodel.position = right_node3.position
+          }
+          break;
+        default:
+          break;
       }
     }
   }
-
-  const applyTransform = (transform: number, transformimgDeltas: Vector3) => {
-    // transform = 0 ======> Position
-    // transform = 1 ======> Rotation
-    // transform = 2 ======> Scale
-    console.log(transform + "===>" + transformimgDeltas);
-  }
+  // const applyTransform = (transform: number, transformimgDeltas: Vector3) => {
+  //   // transform = 0 ======> Position
+  //   // transform = 1 ======> Rotation
+  //   // transform = 2 ======> Scale
+  //   console.log(transform + "===>" + transformimgDeltas);
+  // }
   const setTransformingDeltas = (transform: number) => {
     if (tmodel) {
       switch (transform) {
@@ -95,9 +123,7 @@ const App = () => {
           break;
       }
     }
-
   };
-
   function saveScene(filename: string, scene: Scene) {
     var serializedScene = SceneSerializer.Serialize(scene);
     var strMesh = JSON.stringify(serializedScene);
@@ -107,40 +133,55 @@ const App = () => {
     const filePath = `${RNFS.DownloadDirectoryPath}/${filename}`;
     RNFS.writeFile(filePath, strMesh, 'utf8')
   }
-
+  function switchView() {
+    setToggleView(!toggleView);
+    if (toggleView) {
+      (scene.activeCamera as ArcRotateCamera).useFramingBehavior = true;
+      (scene.activeCamera as ArcRotateCamera).setTarget(tmodel);
+      elk_model.setEnabled(false);
+      mule_deer_model.setEnabled(false);
+      whiteTail_deer_model.setEnabled(false);
+    } else {
+      switchSpecies(activespecies);
+      if (activespecies == 1) {
+        (scene.activeCamera as ArcRotateCamera).setTarget(elk_model);
+      } if (activespecies == 2) {
+        (scene.activeCamera as ArcRotateCamera).setTarget(mule_deer_model);
+      } if (activespecies == 3) {
+        (scene.activeCamera as ArcRotateCamera).setTarget(whiteTail_deer_model);
+      }
+    }
+  }
   function switchSpecies(specie: number) {
     switch (specie) {
       case 1:
         elk_model.setEnabled(true)
         mule_deer_model.setEnabled(false)
         whiteTail_deer_model.setEnabled(false)
+        setActiveSpecies(specie)
         break;
       case 2:
         elk_model.setEnabled(false)
         mule_deer_model.setEnabled(true)
         whiteTail_deer_model.setEnabled(false)
+        setActiveSpecies(specie)
         break;
       case 3:
         elk_model.setEnabled(false)
         mule_deer_model.setEnabled(false)
         whiteTail_deer_model.setEnabled(true)
+        setActiveSpecies(specie)
         break;
-
       default:
-
         break;
     }
-
   }
-
   function loadScene(url: string, fileName: string, scene: Scene) {
     var loader = new AssetsManager(scene);
     var loader_task: MeshAssetTask
     fileName = 'fileName.babylon';
     var dirPath = RNFS.DownloadDirectoryPath;
     url = `file://${dirPath}/`;
-
-
     loader_task = loader.addMeshTask("loader_task", "", url, fileName);
     loader_task.onSuccess = function (task: any) {
       for (var i in task.loadedMeshes) {
@@ -155,10 +196,7 @@ const App = () => {
       }
     }
     loader.load();
-
   }
-
-
   let buttonText = '';
   switch (buttonState) {
     case 0:
@@ -208,11 +246,26 @@ const App = () => {
       scene.clearColor = Color4.FromColor3(new Color3(0.71, 0.89, 0.91), 1);
       scene.createDefaultCamera(true, false, true);
       (scene.activeCamera as ArcRotateCamera).alpha += Math.PI;
-      (scene.activeCamera as ArcRotateCamera).panningInertia = 0;
+      (scene.activeCamera as ArcRotateCamera).panningInertia = 0.1;
       (scene.activeCamera as ArcRotateCamera).allowUpsideDown = true;
       (scene.activeCamera as ArcRotateCamera).noRotationConstraint = true;
       (scene.activeCamera as ArcRotateCamera).useNaturalPinchZoom = true;
       (scene.activeCamera as ArcRotateCamera).radius = 20;
+
+      MainCamera = (scene.activeCamera as ArcRotateCamera);
+
+
+      var skybox = MeshBuilder.CreateBox("skyBox", { size: 1000.0 }, scene);
+      skybox.scaling.y = -1;
+      var skyboxMaterial = new StandardMaterial("skyBox", scene);
+      skyboxMaterial.backFaceCulling = false;
+      skyboxMaterial.reflectionTexture = new CubeTexture("http://localhost:8081/assets/textures/skybox/skybox", scene);
+      skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+      skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
+      skyboxMaterial.specularColor = new Color3(0, 0, 0);
+      skybox.material = skyboxMaterial;
+
+
 
       setCamera(scene.activeCamera!);
       scene.createDefaultLight(true);
@@ -239,9 +292,7 @@ const App = () => {
       scalegizmo = new ScaleGizmo(utilLayer);
 
       SceneLoader.Append("http://192.168.3.122:5500/antler/", "texturedMesh.gltf", scene,
-        function (scene) {
-          tmodel = scene.meshes[2];
-
+        function () {
           positionGizmo.scaleRatio = -2;
           rotationgizmo.scaleRatio = 2;
           scalegizmo.scaleRatio = 2;
@@ -264,54 +315,65 @@ const App = () => {
         })
       SceneLoader.Append("http://192.168.3.122:5500/Antler1/", "deer.gltf", scene,
         function (elk) {
-          right_node = elk.meshes[5];
-          left_node = elk.meshes[6];
-        })
-      SceneLoader.Append("http://192.168.3.122:5500/Antler2/", "deer.gltf", scene,
-        function (elk) {
-          right_node = elk.meshes[5];
-          left_node = elk.meshes[6];
-        })
-      SceneLoader.Append("http://192.168.3.122:5500/Antler3/", "deer.gltf", scene,
-        function (elk) {
-          right_node = elk.meshes[5];
-          left_node = elk.meshes[6];
-
           elk.meshes.forEach((value: AbstractMesh) => {
-            console.log(value.name);
             if (value.name === "Deer1_primitive0") {
               elk_model = value
-            }
-            if (value.name === "Deer2_primitive0") {
-              mule_deer_model = value
-            }
-            if (value.name === "Deer3_primitive0") {
-              whiteTail_deer_model = value
-            }
-            if (value.name === "texturedMesh") {
-              tmodel = value;
-            }
-            if (value.name === "left_node") {
-              left_node = value;
-            }
-            if (value.name === "right_node") {
-              right_node = value;
             }
           })
           elk.meshes.forEach((value: AbstractMesh) => {
             if (value.name === "Deer1_primitive1") {
               value.setParent(elk_model);
             }
-            if (value.name === "Deer2_primitive1") {
-              value.setParent(mule_deer_model)
-            } if (value.name === "Deer3_primitive1") {
-              value.setParent(whiteTail_deer_model)
-
+          })
+          elk_model.setEnabled(false)
+        })
+      SceneLoader.Append("http://192.168.3.122:5500/Antler2/", "deer.gltf", scene,
+        function (elk) {
+          elk.meshes.forEach((value: AbstractMesh) => {
+            if (value.name === "Deer2_primitive0") {
+              mule_deer_model = value
             }
           })
-
-          elk_model.setEnabled(false)
+          elk.meshes.forEach((value: AbstractMesh) => {
+            if (value.name === "Deer2_primitive1") {
+              value.setParent(mule_deer_model)
+            }
+          })
           mule_deer_model.setEnabled(false)
+        })
+      SceneLoader.Append("http://192.168.3.122:5500/Antler3/", "deer.gltf", scene,
+        function (elk) {
+          elk.meshes.forEach((value: AbstractMesh) => {
+            if (value.name === "Deer3_primitive0") {
+              whiteTail_deer_model = value
+            }
+            if (value.name === "texturedMesh") {
+              tmodel = value;
+            }
+            if (value.name === "left_node1") {
+              left_node1 = value;
+            }
+            if (value.name === "right_node1") {
+              right_node1 = value;
+            }
+            if (value.name === "left_node2") {
+              left_node2 = value;
+            }
+            if (value.name === "right_node2") {
+              right_node2 = value;
+            }
+            if (value.name === "left_node3") {
+              left_node3 = value;
+            }
+            if (value.name === "right_node3") {
+              right_node3 = value;
+            }
+          })
+          elk.meshes.forEach((value: AbstractMesh) => {
+            if (value.name === "Deer3_primitive1") {
+              value.setParent(whiteTail_deer_model)
+            }
+          })
           whiteTail_deer_model.setEnabled(false)
         })
       scene.beforeRender = function () {
@@ -361,6 +423,12 @@ const App = () => {
         </View >
       </View >
 
+      <View style={styles.toggleView}>
+        <TouchableOpacity style={styles.toggleBtn} onPress={() => { switchView() }}>
+          <Image style={styles.toggleimage} source={toggleView ? deerViewIcon : antlerViewIcon} />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.containerOne}>
         < View style={showspeciesPanel ? styles.containerOne : { display: "none" }} >
           <TouchableOpacity style={styles.ImageBtn} onPress={() => { switchSpecies(1) }}>
@@ -379,13 +447,13 @@ const App = () => {
       </View>
 
       <View style={styles.container}>
-        <TouchableOpacity style={styles.button} onPress={() => { updateAntlerPosition("left") }}>
+        <TouchableOpacity style={styles.button} onPress={() => { updateAntlerPosition(activespecies, "left") }}>
           <Text style={styles.buttonText}>Left</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={handlePress}>
           <Text style={styles.buttonText}>{buttonText}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => { updateAntlerPosition("right") }}>
+        <TouchableOpacity style={styles.button} onPress={() => { updateAntlerPosition(activespecies, "right") }}>
           <Text style={styles.buttonText}>Right</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={() => { saveScene("fileName", scene) }}>
@@ -394,10 +462,8 @@ const App = () => {
         <TouchableOpacity style={styles.button} onPress={() => { loadScene("abc", "abc", scene) }}>
           <Text style={styles.buttonText}>Load</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => {
-          setShowSpeciesPanel(!showspeciesPanel);
-        }}>
-          <Text style={styles.buttonText}>Show</Text>
+        <TouchableOpacity style={styles.button} onPress={() => { setShowSpeciesPanel(!showspeciesPanel) }}>
+          <Image style={styles.imageUp} source={require('./assets/textures/arrow_up_icon.png')} />
         </TouchableOpacity>
       </View>
     </View >
@@ -408,6 +474,29 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     padding: 10,
+  },
+  toggleView: {
+    width: 42,
+    height: 42,
+    backgroundColor: 'rgba(255, 255, 255, 1)',
+    // padding: 20,
+    borderRadius: 100,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+
+    marginTop: 455,
+    marginLeft: 312,
+    position: "absolute",
+    alignItems: "flex-start",
+  },
+  toggleBtn: {
+
   },
   containerOne: {
     flexDirection: "row",
@@ -445,16 +534,9 @@ const styles = StyleSheet.create({
   },
   modalView: {
     width: "60%",
-    backgroundColor: 'rgba(255, 255, 205, 1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
     padding: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5,
     display: "flex",
   },
   BtnSet: {
@@ -464,7 +546,19 @@ const styles = StyleSheet.create({
   btnText: {
     color: "black",
     justifyContent: "space-evenly"
-  }
+  },
+  imageUp: {
+    padding: 20,
+    width: 20,
+    height: 20,
+    alignContent: "center",
+  },
+  toggleimage: {
+    padding: 18,
+    width: 15,
+    height: 15,
+    alignContent: "center",
+  },
 });
 
 
