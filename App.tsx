@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Modal, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Button, Image, Modal, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import '@babylonjs/loaders/glTF';
 import { EngineView, useEngine } from '@babylonjs/react-native';
-import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, Material, Nullable, UtilityLayerRenderer, BoundingBoxGizmo, SixDofDragBehavior, MultiPointerScaleBehavior, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo, SceneSerializer, AssetsManager, MeshAssetTask } from '@babylonjs/core';
+import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, UtilityLayerRenderer, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo, SceneSerializer, AssetsManager, MeshAssetTask } from '@babylonjs/core';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 // import { WebXRSessionManager, WebXRTrackingState } from '@babylonjs/core/XR';
 import RNFS from 'react-native-fs';
@@ -13,6 +13,8 @@ var rotationgizmo: RotationGizmo
 var scalegizmo: ScaleGizmo
 var tmodel: AbstractMesh;
 var elk_model: AbstractMesh;
+var mule_deer_model: AbstractMesh;
+var whiteTail_deer_model: AbstractMesh;
 var left_node: AbstractMesh;
 var right_node: AbstractMesh;
 var scene: Scene;
@@ -28,6 +30,7 @@ const App = () => {
   const engine = useEngine();
   const [camera, setCamera] = useState<Camera>();
   const [buttonState, setButtonState] = useState<number>(0);
+  const [showspeciesPanel, setShowSpeciesPanel] = useState<boolean>(false);
   const [objectPosition, setObjectPostion] = useState<{ x: number, y: number, z: number }>({ x: 0, y: 0, z: 0 })
 
   const handlePress = () => {
@@ -42,14 +45,9 @@ const App = () => {
     if (tmodel) {
       if (position === "left") {
         tmodel.position = left_node.position
-        console.log(tmodel.position)
-        console.log(left_node.position)
       } else if (position === "right") {
         tmodel.position = right_node.position
-        console.log(tmodel.position)
-        console.log(right_node.position)
       } else {
-        console.log("poko")
       }
     }
   }
@@ -108,8 +106,31 @@ const App = () => {
     }
     const filePath = `${RNFS.DownloadDirectoryPath}/${filename}`;
     RNFS.writeFile(filePath, strMesh, 'utf8')
+  }
 
-    console.log("filePath", filePath)
+  function switchSpecies(specie: number) {
+    switch (specie) {
+      case 1:
+        elk_model.setEnabled(true)
+        mule_deer_model.setEnabled(false)
+        whiteTail_deer_model.setEnabled(false)
+        break;
+      case 2:
+        elk_model.setEnabled(false)
+        mule_deer_model.setEnabled(true)
+        whiteTail_deer_model.setEnabled(false)
+        break;
+      case 3:
+        elk_model.setEnabled(false)
+        mule_deer_model.setEnabled(false)
+        whiteTail_deer_model.setEnabled(true)
+        break;
+
+      default:
+
+        break;
+    }
+
   }
 
   function loadScene(url: string, fileName: string, scene: Scene) {
@@ -142,7 +163,6 @@ const App = () => {
   switch (buttonState) {
     case 0:
       buttonText = 'Toggle 1';
-      // styles.modalView.display = "flex";
       currentTransformingDeltas = '';
       transformType = 9;
       if (tmodel) {
@@ -192,8 +212,8 @@ const App = () => {
       (scene.activeCamera as ArcRotateCamera).allowUpsideDown = true;
       (scene.activeCamera as ArcRotateCamera).noRotationConstraint = true;
       (scene.activeCamera as ArcRotateCamera).useNaturalPinchZoom = true;
-      (scene.activeCamera as ArcRotateCamera).radius=20;
-      
+      (scene.activeCamera as ArcRotateCamera).radius = 20;
+
       setCamera(scene.activeCamera!);
       scene.createDefaultLight(true);
       scene.lights[0].intensity = 2;
@@ -206,13 +226,10 @@ const App = () => {
       grounddiffuseTexture.uScale = 5.0;
       grounddiffuseTexture.vScale = 5.0;
       groundMat.diffuseTexture = grounddiffuseTexture;
+      groundMat.roughness = 0.5;
       ground.material = groundMat;
       ground.receiveShadows = true;
       const mat = new PBRMetallicRoughnessMaterial("mat", scene);
-      // mat.metallic = 1;
-      // mat.roughness = 0.5;
-      // mat.alpha = 0.5;
-      // mat.baseColor = Color3.Yellow();
       mat.wireframe = true;
       box.material = mat;
       var utilLayer = new UtilityLayerRenderer(scene)
@@ -221,7 +238,7 @@ const App = () => {
       rotationgizmo = new RotationGizmo(utilLayer);
       scalegizmo = new ScaleGizmo(utilLayer);
 
-      SceneLoader.Append("http://192.168.3.120:5500/antler/", "texturedMesh.gltf", scene,
+      SceneLoader.Append("http://192.168.3.122:5500/antler/", "texturedMesh.gltf", scene,
         function (scene) {
           tmodel = scene.meshes[2];
 
@@ -245,24 +262,57 @@ const App = () => {
           rotationgizmo.updateGizmoRotationToMatchAttachedMesh = false;
           rotationgizmo.updateGizmoPositionToMatchAttachedMesh = true;
         })
-      SceneLoader.Append("http://192.168.3.120:5500/Antler1/", "deer.gltf", scene,
+      SceneLoader.Append("http://192.168.3.122:5500/Antler1/", "deer.gltf", scene,
         function (elk) {
-          elk_model = elk.meshes[2];
+          right_node = elk.meshes[5];
+          left_node = elk.meshes[6];
+        })
+      SceneLoader.Append("http://192.168.3.122:5500/Antler2/", "deer.gltf", scene,
+        function (elk) {
+          right_node = elk.meshes[5];
+          left_node = elk.meshes[6];
+        })
+      SceneLoader.Append("http://192.168.3.122:5500/Antler3/", "deer.gltf", scene,
+        function (elk) {
           right_node = elk.meshes[5];
           left_node = elk.meshes[6];
 
           elk.meshes.forEach((value: AbstractMesh) => {
             console.log(value.name);
+            if (value.name === "Deer1_primitive0") {
+              elk_model = value
+            }
+            if (value.name === "Deer2_primitive0") {
+              mule_deer_model = value
+            }
+            if (value.name === "Deer3_primitive0") {
+              whiteTail_deer_model = value
+            }
             if (value.name === "texturedMesh") {
               tmodel = value;
             }
-            else if (value.name === "left_node") {
+            if (value.name === "left_node") {
               left_node = value;
             }
-            else if (value.name === "right_node") {
+            if (value.name === "right_node") {
               right_node = value;
             }
           })
+          elk.meshes.forEach((value: AbstractMesh) => {
+            if (value.name === "Deer1_primitive1") {
+              value.setParent(elk_model);
+            }
+            if (value.name === "Deer2_primitive1") {
+              value.setParent(mule_deer_model)
+            } if (value.name === "Deer3_primitive1") {
+              value.setParent(whiteTail_deer_model)
+
+            }
+          })
+
+          elk_model.setEnabled(false)
+          mule_deer_model.setEnabled(false)
+          whiteTail_deer_model.setEnabled(false)
         })
       scene.beforeRender = function () {
         if (tmodel) {
@@ -280,6 +330,7 @@ const App = () => {
       < SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
         <EngineView style={{ flex: 1 }} camera={camera} />
       </SafeAreaView >
+
       < View style={styles.centeredView} >
         < View style={transformType != 9 && transformType != 1 ? styles.modalView : { display: "none" }} >
           <Text style={{ color: "black" }}>{currentTransformingDeltas}</Text>
@@ -309,6 +360,24 @@ const App = () => {
           </View>
         </View >
       </View >
+
+      <View style={styles.containerOne}>
+        < View style={showspeciesPanel ? styles.containerOne : { display: "none" }} >
+          <TouchableOpacity style={styles.ImageBtn} onPress={() => { switchSpecies(1) }}>
+            <Image style={styles.btnImage} source={require('./assets/textures/deerhorn.png')} />
+            <Text style={styles.buttonText}>ELK</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.ImageBtn} onPress={() => { switchSpecies(2) }}>
+            <Image style={styles.btnImage} source={require('./assets/textures/deerhorn.png')} />
+            <Text style={styles.buttonText}>Mule Deer</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.ImageBtn} onPress={() => { switchSpecies(3) }}>
+            <Image style={styles.btnImage} source={require('./assets/textures/deerhorn.png')} />
+            <Text style={styles.buttonText}>White Tail Deer</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <View style={styles.container}>
         <TouchableOpacity style={styles.button} onPress={() => { updateAntlerPosition("left") }}>
           <Text style={styles.buttonText}>Left</Text>
@@ -325,6 +394,11 @@ const App = () => {
         <TouchableOpacity style={styles.button} onPress={() => { loadScene("abc", "abc", scene) }}>
           <Text style={styles.buttonText}>Load</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => {
+          setShowSpeciesPanel(!showspeciesPanel);
+        }}>
+          <Text style={styles.buttonText}>Show</Text>
+        </TouchableOpacity>
       </View>
     </View >
   );
@@ -334,7 +408,25 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     padding: 10,
-    marginLeft: 20,
+  },
+  containerOne: {
+    flexDirection: "row",
+    padding: 10,
+    display: "flex",
+  },
+  btnImage: {
+    width: "80%",
+    height: "20%",
+    marginTop: 7,
+    paddingTop: 60,
+    alignSelf: "center",
+  },
+  ImageBtn: {
+    marginLeft: 5,
+    borderRadius: 5,
+    backgroundColor: "grey",
+    width: 100,
+    height: 90,
   },
   button: {
     backgroundColor: "#ddd",
@@ -342,8 +434,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   buttonText: {
-    fontSize: 16,
     fontWeight: 'bold',
+    alignSelf: "center",
   },
   centeredView: {
     marginTop: 25,
