@@ -2046,6 +2046,32 @@ babel-preset-jest@^26.6.2:
     babel-plugin-jest-hoist "^26.6.2"
     babel-preset-current-node-syntax "^1.0.0"
 
+babylonjs-gltf2interface@^6.4.1:
+  version "6.4.1"
+  resolved "https://registry.yarnpkg.com/babylonjs-gltf2interface/-/babylonjs-gltf2interface-6.4.1.tgz#9441bb570c458adb6f51d6b1125e587fd40012fe"
+  integrity sha512-8nSfItXdNkf59145022IiJIev6PZLQ9PhLf1KtkfkJf8hQkkAM0Ct6PO5fXZi8IXgxYBzrDJf0WmG6FUOdERzA==
+
+babylonjs-loaders@^6.4.1:
+  version "6.4.1"
+  resolved "https://registry.yarnpkg.com/babylonjs-loaders/-/babylonjs-loaders-6.4.1.tgz#d651d78d16b177c96ae1b034b95f1ac411d71803"
+  integrity sha512-Wi5RKvzBL6jfvX3P2KIzE2cV9WZNu2sRXYhKq+dFbovnLPCoIJ+9pXpE+LSMR42DMbRMezokTxSu/NfqS3L4FA==
+  dependencies:
+    babylonjs "^6.4.1"
+    babylonjs-gltf2interface "^6.4.1"
+
+babylonjs-serializers@^6.4.1:
+  version "6.4.1"
+  resolved "https://registry.yarnpkg.com/babylonjs-serializers/-/babylonjs-serializers-6.4.1.tgz#aa1ea240bdf883e44fd4cdee729048dfe7ea8f5e"
+  integrity sha512-Fs8S6RG6Q67+TRRo5aBPEAjExZ6dFf/E/cEl4opPshROC9IkDpQ7xnESD4jEjjpHcM/M8XwB7mzX5vzhSyoA/Q==
+  dependencies:
+    babylonjs "^6.4.1"
+    babylonjs-gltf2interface "^6.4.1"
+
+babylonjs@^6.4.1:
+  version "6.4.1"
+  resolved "https://registry.yarnpkg.com/babylonjs/-/babylonjs-6.4.1.tgz#797b3fbb360e5613abed36e996399d0428c2824e"
+  integrity sha512-dM5yURV15DgpzrocRGcBXhVMV0Mg3nrNS9UXMZZ7dbzXgne8LVukxtid3LAUTYK2mdNragoQY0U9KLA8NZKROQ==
+
 balanced-match@^1.0.0:
   version "1.0.2"
   resolved "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz"

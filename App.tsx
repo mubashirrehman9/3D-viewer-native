@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Image, Modal, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import '@babylonjs/loaders/glTF';
 import { EngineView, useEngine } from '@babylonjs/react-native';
 import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, UtilityLayerRenderer, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo, SceneSerializer, AssetsManager, MeshAssetTask, CubeTexture, MeshBuilder } from '@babylonjs/core';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+import { OBJExport } from 'babylonjs-serializers';
 // import { WebXRSessionManager, WebXRTrackingState } from '@babylonjs/core/XR';
 import RNFS from 'react-native-fs';
 
@@ -30,6 +31,7 @@ var transformType: number;
 var MainCamera: Camera;
 var antlerViewIcon = require("./assets/textures/antler_icon.png");
 var deerViewIcon = require("./assets/textures/deer.png");
+var skybox:AbstractMesh
 // var tempTransform: Vector3;
 
 const App = () => {
@@ -125,6 +127,14 @@ const App = () => {
     }
   };
   function saveScene(filename: string, scene: Scene) {
+    // scene.meshes.forEach((e)=>{
+    //   if(e.name === "texturedMesh"){
+    //     e.doNotSerialize = false;
+    //   }else{
+    //     e.doNotSerialize =true;
+    //   }
+    // console.log(e.name);
+    // })
     var serializedScene = SceneSerializer.Serialize(scene);
     var strMesh = JSON.stringify(serializedScene);
     if (filename.toLowerCase().lastIndexOf(".babylon") !== filename.length - 8 || filename.length < 9) {
@@ -255,7 +265,7 @@ const App = () => {
       MainCamera = (scene.activeCamera as ArcRotateCamera);
 
 
-      var skybox = MeshBuilder.CreateBox("skyBox", { size: 1000.0 }, scene);
+      skybox = MeshBuilder.CreateBox("skyBox", { size: 1000.0 }, scene);
       skybox.scaling.y = -1;
       var skyboxMaterial = new StandardMaterial("skyBox", scene);
       skyboxMaterial.backFaceCulling = false;
@@ -276,10 +286,13 @@ const App = () => {
 
       var groundMat = new StandardMaterial("groundMaterial", scene);
       var grounddiffuseTexture = new Texture("http://localhost:8081/assets/textures/ground_diff.jpg", scene);
-      grounddiffuseTexture.uScale = 5.0;
-      grounddiffuseTexture.vScale = 5.0;
+      var groundbumpTexture = new Texture("http://localhost:8081/assets/textures/ground_displacement.png", scene);
+      grounddiffuseTexture.uScale = 10.0;
+      grounddiffuseTexture.vScale = 10.0;
+      groundbumpTexture.uScale = 10.0;
+      groundbumpTexture.vScale = 10.0;
       groundMat.diffuseTexture = grounddiffuseTexture;
-      groundMat.roughness = 0.5;
+      groundMat.bumpTexture = groundbumpTexture;
       ground.material = groundMat;
       ground.receiveShadows = true;
       const mat = new PBRMetallicRoughnessMaterial("mat", scene);
@@ -291,7 +304,7 @@ const App = () => {
       rotationgizmo = new RotationGizmo(utilLayer);
       scalegizmo = new ScaleGizmo(utilLayer);
 
-      SceneLoader.Append("http://192.168.3.122:5500/antler/", "texturedMesh.gltf", scene,
+      SceneLoader.Append("http://192.168.3.109:5500/antler/", "texturedMesh.gltf", scene,
         function () {
           positionGizmo.scaleRatio = -2;
           rotationgizmo.scaleRatio = 2;
@@ -313,7 +326,7 @@ const App = () => {
           rotationgizmo.updateGizmoRotationToMatchAttachedMesh = false;
           rotationgizmo.updateGizmoPositionToMatchAttachedMesh = true;
         })
-      SceneLoader.Append("http://192.168.3.122:5500/Antler1/", "deer.gltf", scene,
+      SceneLoader.Append("http://192.168.3.109:5500/Antler1/", "deer.gltf", scene,
         function (elk) {
           elk.meshes.forEach((value: AbstractMesh) => {
             if (value.name === "Deer1_primitive0") {
@@ -327,7 +340,7 @@ const App = () => {
           })
           elk_model.setEnabled(false)
         })
-      SceneLoader.Append("http://192.168.3.122:5500/Antler2/", "deer.gltf", scene,
+      SceneLoader.Append("http://192.168.3.109:5500/Antler2/", "deer.gltf", scene,
         function (elk) {
           elk.meshes.forEach((value: AbstractMesh) => {
             if (value.name === "Deer2_primitive0") {
@@ -341,7 +354,7 @@ const App = () => {
           })
           mule_deer_model.setEnabled(false)
         })
-      SceneLoader.Append("http://192.168.3.122:5500/Antler3/", "deer.gltf", scene,
+      SceneLoader.Append("http://192.168.3.109:5500/Antler3/", "deer.gltf", scene,
         function (elk) {
           elk.meshes.forEach((value: AbstractMesh) => {
             if (value.name === "Deer3_primitive0") {
@@ -447,13 +460,13 @@ const App = () => {
       </View>
 
       <View style={styles.container}>
-        <TouchableOpacity style={styles.button} onPress={() => { updateAntlerPosition(activespecies, "left") }}>
+        <TouchableOpacity style={toggleView ? styles.button : { display: "none" }} onPress={() => { updateAntlerPosition(activespecies, "left") }}>
           <Text style={styles.buttonText}>Left</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={handlePress}>
           <Text style={styles.buttonText}>{buttonText}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => { updateAntlerPosition(activespecies, "right") }}>
+        <TouchableOpacity style={toggleView ? styles.button : { display: "none" }} onPress={() => { updateAntlerPosition(activespecies, "right") }}>
           <Text style={styles.buttonText}>Right</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={() => { saveScene("fileName", scene) }}>
