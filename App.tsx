@@ -8,6 +8,7 @@ import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 import { OBJExport } from 'babylonjs-serializers';
 // import { WebXRSessionManager, WebXRTrackingState } from '@babylonjs/core/XR';
 import RNFS from 'react-native-fs';
+import { float } from 'babylonjs';
 
 var positionGizmo: PositionGizmo
 var rotationgizmo: RotationGizmo
@@ -31,8 +32,19 @@ var transformType: number;
 var MainCamera: Camera;
 var antlerViewIcon = require("./assets/textures/antler_icon.png");
 var deerViewIcon = require("./assets/textures/deer.png");
-var skybox:AbstractMesh
+var skybox: AbstractMesh
 // var tempTransform: Vector3;
+var newX: float;
+var newY: float;
+var newZ: float;
+var endPoint: string = "http://192.168.3.115:5500/";
+
+
+interface Position {
+  x: number;
+  y: number;
+  z: number;
+}
 
 const App = () => {
   const engine = useEngine();
@@ -41,7 +53,38 @@ const App = () => {
   const [showspeciesPanel, setShowSpeciesPanel] = useState<boolean>(false);
   const [toggleView, setToggleView] = useState<boolean>(false);
   const [activespecies, setActiveSpecies] = useState<number>(1);
-  const [objectPosition, setObjectPostion] = useState<{ x: number, y: number, z: number }>({ x: 0, y: 0, z: 0 })
+  const [objectPosition, setObjectPosition] = useState<Position>({ x: 0, y: 0, z: 0 });
+
+  const handleTransformChange = (text: string, vector: string) => {
+    if (vector === "x") {
+      newX = parseFloat(text) || 0;
+      setObjectPosition((prevPosition) => ({ ...prevPosition, x: newX }));
+      // console.log(newX)
+    }
+    else if (vector === "y") {
+      newY = parseFloat(text) || 0;
+      setObjectPosition((prevPosition) => ({ ...prevPosition, y: newY }));
+      // console.log(newY)
+    }
+    else if (vector === "z") {
+      newZ = parseFloat(text) || 0;
+      setObjectPosition((prevPosition) => ({ ...prevPosition, z: newZ }));
+      // console.log(newZ)
+    }
+  };
+
+  const applyTransform = (transformType: number, x: number, y: number, z: number) => {
+    if (transformType == 0) {
+      tmodel.position.set(x, y, z)
+    } else if (transformType == 2) {
+      tmodel.scaling.set(x, y, z)
+      // console.log("Second", x, y, z)
+    }
+  }
+  const cancelTransform = () => {
+
+
+  }
 
   const handlePress = () => {
     let newState = buttonState + 1;
@@ -95,7 +138,7 @@ const App = () => {
           currentTransformingX = tmodel.position.x
           currentTransformingY = tmodel.position.y
           currentTransformingZ = tmodel.position.z
-          setObjectPostion({
+          setObjectPosition({
             x: currentTransformingX,
             y: currentTransformingY,
             z: currentTransformingZ
@@ -105,7 +148,7 @@ const App = () => {
           currentTransformingX = tmodel.rotation.x
           currentTransformingY = tmodel.rotation.y
           currentTransformingZ = tmodel.rotation.z
-          setObjectPostion({
+          setObjectPosition({
             x: currentTransformingX,
             y: currentTransformingY,
             z: currentTransformingZ
@@ -115,7 +158,7 @@ const App = () => {
           currentTransformingX = tmodel.scaling.x
           currentTransformingY = tmodel.scaling.y
           currentTransformingZ = tmodel.scaling.z
-          setObjectPostion({
+          setObjectPosition({
             x: currentTransformingX,
             y: currentTransformingY,
             z: currentTransformingZ
@@ -304,7 +347,7 @@ const App = () => {
       rotationgizmo = new RotationGizmo(utilLayer);
       scalegizmo = new ScaleGizmo(utilLayer);
 
-      SceneLoader.Append("http://192.168.3.109:5500/antler/", "texturedMesh.gltf", scene,
+      SceneLoader.Append(endPoint + "antler/", "texturedMesh.gltf", scene,
         function () {
           positionGizmo.scaleRatio = -2;
           rotationgizmo.scaleRatio = 2;
@@ -326,7 +369,7 @@ const App = () => {
           rotationgizmo.updateGizmoRotationToMatchAttachedMesh = false;
           rotationgizmo.updateGizmoPositionToMatchAttachedMesh = true;
         })
-      SceneLoader.Append("http://192.168.3.109:5500/Antler1/", "deer.gltf", scene,
+      SceneLoader.Append(endPoint + "Deer1/", "elk.gltf", scene,
         function (elk) {
           elk.meshes.forEach((value: AbstractMesh) => {
             if (value.name === "Deer1_primitive0") {
@@ -340,7 +383,7 @@ const App = () => {
           })
           elk_model.setEnabled(false)
         })
-      SceneLoader.Append("http://192.168.3.109:5500/Antler2/", "deer.gltf", scene,
+      SceneLoader.Append(endPoint + "Antler2/", "deer.gltf", scene,
         function (elk) {
           elk.meshes.forEach((value: AbstractMesh) => {
             if (value.name === "Deer2_primitive0") {
@@ -354,7 +397,7 @@ const App = () => {
           })
           mule_deer_model.setEnabled(false)
         })
-      SceneLoader.Append("http://192.168.3.109:5500/Antler3/", "deer.gltf", scene,
+      SceneLoader.Append(endPoint + "Antler3/", "deer.gltf", scene,
         function (elk) {
           elk.meshes.forEach((value: AbstractMesh) => {
             if (value.name === "Deer3_primitive0") {
@@ -406,38 +449,49 @@ const App = () => {
         <EngineView style={{ flex: 1 }} camera={camera} />
       </SafeAreaView >
 
-      < View style={styles.centeredView} >
-        < View style={transformType != 9 && transformType != 1 ? styles.modalView : { display: "none" }} >
-          <Text style={{ color: "black" }}>{currentTransformingDeltas}</Text>
-          <View style={{ flexDirection: "row", width: 100, height: 60 }}>
-            <Text style={{ marginTop: 20, color: "black" }}>X=</Text>
-            <TextInput placeholder='X' style={{ width: 30, margin: 10, backgroundColor: "white", color: "black" }}
-              value={objectPosition.x.toString()}
-              editable={true}
-              keyboardType="numeric" />
-            <Text style={{ marginTop: 20, color: "black" }}>Y=</Text>
-            <TextInput placeholder='Y' style={{ width: 30, margin: 10, backgroundColor: "white", color: "black" }}
-              value={objectPosition.y.toString()}
-              keyboardType="numeric" />
-            <Text style={{ marginTop: 20, color: "black" }}>Z=</Text>
-            <TextInput placeholder='Z' style={{ width: 30, margin: 10, backgroundColor: "white", color: "black" }}
-              value={objectPosition.z.toString()}
-              keyboardType="numeric" />
-            <View />
+      <View style={styles.centeredView}>
+        <View style={transformType !== 9 && transformType !== 1 ? styles.modalView : { display: 'none' }}>
+          <Text style={{ color: 'black' }}>{currentTransformingDeltas}</Text>
+          <View style={{ flexDirection: 'row', width: 100, height: 60 }}>
+            <Text style={{ marginTop: 20, color: 'black' }}>X=</Text>
+            <TextInput
+              placeholder="X"
+              style={styles.Textboxes}
+              value={objectPosition.x.toString().substring(0, 4)}
+              onChangeText={(text) => handleTransformChange(text, "x")}
+              keyboardType="numeric"
+            />
+            <Text style={{ marginTop: 20, color: 'black' }}>Y=</Text>
+            <TextInput
+              placeholder="Y"
+              style={styles.Textboxes}
+              value={objectPosition.y.toString().substring(0, 4)}
+              onChangeText={(text) => handleTransformChange(text, "y")}
+              keyboardType="numeric"
+            />
+            <Text style={{ marginTop: 20, color: 'black' }}>Z=</Text>
+            <TextInput
+              placeholder="Z"
+              style={styles.Textboxes}
+              value={objectPosition.z.toString().substring(0, 4)}
+              onChangeText={(text) => handleTransformChange(text, "z")}
+              keyboardType="numeric"
+            />
           </View>
           <View style={styles.BtnSet}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => { applyTransform(transformType, newX, newY, newZ) }} >
               <Text style={styles.btnText}>OK</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
+            {/* <TouchableOpacity>
               <Text style={styles.btnText}>Cancel</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
-        </View >
-      </View >
+        </View>
+      </View>
+
 
       <View style={styles.toggleView}>
-        <TouchableOpacity style={styles.toggleBtn} onPress={() => { switchView() }}>
+        <TouchableOpacity onPress={() => { switchView() }}>
           <Image style={styles.toggleimage} source={toggleView ? deerViewIcon : antlerViewIcon} />
         </TouchableOpacity>
       </View>
@@ -492,7 +546,6 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     backgroundColor: 'rgba(255, 255, 255, 1)',
-    // padding: 20,
     borderRadius: 100,
     shadowColor: '#000',
     shadowOffset: {
@@ -508,8 +561,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     alignItems: "flex-start",
   },
-  toggleBtn: {
-
+  Textboxes: {
+    width: 30,
+    margin: 10,
+    backgroundColor: "white",
+    color: "black"
+  },
+  focusedInput: {
+    borderColor: 'blue',
   },
   containerOne: {
     flexDirection: "row",
@@ -561,7 +620,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly"
   },
   imageUp: {
-    padding: 20,
+    padding: 10,
     width: 20,
     height: 20,
     alignContent: "center",
