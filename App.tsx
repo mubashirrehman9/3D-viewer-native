@@ -9,6 +9,8 @@ import { OBJExport } from 'babylonjs-serializers';
 // import { WebXRSessionManager, WebXRTrackingState } from '@babylonjs/core/XR';
 import RNFS from 'react-native-fs';
 import { float } from 'babylonjs';
+import RNFetchBlob from 'rn-fetch-blob';
+
 
 var positionGizmo: PositionGizmo
 var rotationgizmo: RotationGizmo
@@ -37,7 +39,7 @@ var skybox: AbstractMesh
 var newX: float;
 var newY: float;
 var newZ: float;
-var endPoint: string = "http://192.168.3.115:5500/";
+var endPoint: string = "http://192.168.3.137:5500/";
 
 
 interface Position {
@@ -185,7 +187,33 @@ const App = () => {
     }
     const filePath = `${RNFS.DownloadDirectoryPath}/${filename}`;
     RNFS.writeFile(filePath, strMesh, 'utf8')
+
+    const uploadFile = async () => {
+      try {
+        const fileData = await RNFetchBlob.fs.readFile(filePath, 'base64');
+        const formData = new FormData();
+        formData.append('file', fileData);
+        const response = await fetch('http://192.168.3.155:8000/api/updating_scene', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            "x-api-key": "T9Uc5loPHR2VHPZ6jgpEzp40iLOLoDa9017wRdGf2uN7hLIoDsE0IU1vFT9XXmEU",
+          },
+          body: formData,
+        });
+        if (response.ok) {
+          console.log('successfully.');
+        } else {
+          console.log('failed.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+    uploadFile();
   }
+
+
   function switchView() {
     setToggleView(!toggleView);
     if (toggleView) {
