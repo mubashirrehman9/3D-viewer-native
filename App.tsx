@@ -10,6 +10,9 @@ import { OBJExport } from 'babylonjs-serializers';
 import RNFS from 'react-native-fs';
 import { float } from 'babylonjs';
 import RNFetchBlob from 'rn-fetch-blob';
+import { Alert, Modal, Pressable } from 'react-native';
+import { uploadFiles, DocumentDirectoryPath } from "react-native-fs";
+
 
 
 var positionGizmo: PositionGizmo
@@ -56,6 +59,7 @@ const App = () => {
   const [toggleView, setToggleView] = useState<boolean>(false);
   const [activespecies, setActiveSpecies] = useState<number>(1);
   const [objectPosition, setObjectPosition] = useState<Position>({ x: 0, y: 0, z: 0 });
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   const handleTransformChange = (text: string, vector: string) => {
     if (vector === "x") {
@@ -172,14 +176,7 @@ const App = () => {
     }
   };
   function saveScene(filename: string, scene: Scene) {
-    // scene.meshes.forEach((e)=>{
-    //   if(e.name === "texturedMesh"){
-    //     e.doNotSerialize = false;
-    //   }else{
-    //     e.doNotSerialize =true;
-    //   }
-    // console.log(e.name);
-    // })
+    setModalVisible(true)
     var serializedScene = SceneSerializer.Serialize(scene);
     var strMesh = JSON.stringify(serializedScene);
     if (filename.toLowerCase().lastIndexOf(".babylon") !== filename.length - 8 || filename.length < 9) {
@@ -187,30 +184,27 @@ const App = () => {
     }
     const filePath = `${RNFS.DownloadDirectoryPath}/${filename}`;
     RNFS.writeFile(filePath, strMesh, 'utf8')
-
-    const uploadFile = async () => {
-      try {
-        const fileData = await RNFetchBlob.fs.readFile(filePath, 'base64');
-        const formData = new FormData();
-        formData.append('file', fileData);
-        const response = await fetch('http://192.168.3.155:8000/api/updating_scene', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            "x-api-key": "T9Uc5loPHR2VHPZ6jgpEzp40iLOLoDa9017wRdGf2uN7hLIoDsE0IU1vFT9XXmEU",
-          },
-          body: formData,
-        });
-        if (response.ok) {
-          console.log('successfully.');
-        } else {
-          console.log('failed.');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-    uploadFile();
+    var files = [
+      {
+        name: "file",
+        filename: "file.babylon",
+        filepath: filePath,
+        filetype: "image/jpeg",
+      },
+    ];
+    
+    uploadFiles({
+      toUrl: "http://192.168.3.129:8000/api/updating_scene/",
+      files: files,
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+      },
+      //invoked when the uploading starts.
+      begin: () => {},
+      // You can use this callback to show a progress indicator.
+      progress: ({ totalBytesSent, totalBytesExpectedToSend }) => {},
+    });
   }
 
 
@@ -542,6 +536,20 @@ const App = () => {
       </View>
 
       <View style={styles.container}>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            Alert.alert('Modal has been closed.');
+            setModalVisible(!modalVisible);
+          }}>
+          <View>
+            <Pressable style={styles.modalViewOne} onPress={() => setModalVisible(!modalVisible)}>
+              <Text style={styles.modalText}>Saving Scene is in process Please Wait ! </Text>
+            </Pressable>
+          </View>
+        </Modal>
         <TouchableOpacity style={toggleView ? styles.button : { display: "none" }} onPress={() => { updateAntlerPosition(activespecies, "left") }}>
           <Text style={styles.buttonText}>Left</Text>
         </TouchableOpacity>
@@ -658,6 +666,49 @@ const styles = StyleSheet.create({
     width: 15,
     height: 15,
     alignContent: "center",
+  },
+  centeredViewOne: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 22,
+    backgroundColor: "white",
+  },
+  modalViewOne: {
+    margin: 20,
+    backgroundColor: 'white',
+    // borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  buttonOne: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  buttonOpen: {
+    backgroundColor: '#F194FF',
+  },
+  buttonClose: {
+    backgroundColor: '#2196F3',
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+    color: "black"
   },
 });
 
