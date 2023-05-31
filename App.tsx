@@ -42,7 +42,7 @@ var skybox: AbstractMesh
 var newX: float;
 var newY: float;
 var newZ: float;
-var endPoint: string = "http://192.168.3.137:5500/";
+var endPoint: string = "http://192.168.45.134:5500/";
 
 
 interface Position {
@@ -177,28 +177,38 @@ const App = () => {
   };
   function saveScene(filename: string, scene: Scene) {
     setModalVisible(true)
-    var serializedScene = SceneSerializer.Serialize(scene);
-    var strMesh = JSON.stringify(serializedScene);
-    if (filename.toLowerCase().lastIndexOf(".babylon") !== filename.length - 8 || filename.length < 9) {
-      filename += ".babylon";
+    // var serializedScene = SceneSerializer.Serialize(scene);
+    // var strMesh = JSON.stringify(serializedScene);
+    // if (filename.toLowerCase().lastIndexOf(".babylon") !== filename.length - 8 || filename.length < 9) {
+    //   filename += ".babylon";
+    // }
+    // const filePath = `${RNFS.DownloadDirectoryPath}/${filename}`;
+    if (filename.toLowerCase().lastIndexOf(".obj") !== filename.length - 8 || filename.length < 9) {
+      filename += ".obj";
     }
+    var MeshesToExport:any = scene.meshes.filter((mesh)=>{
+      return mesh.name == "texturedMesh" 
+    })
+    var strMesh = OBJExport.OBJ(MeshesToExport,false,"",true)
+    // console.log(strMesh)
     const filePath = `${RNFS.DownloadDirectoryPath}/${filename}`;
     RNFS.writeFile(filePath, strMesh, 'utf8')
     var files = [
       {
         name: "file",
-        filename: "file.babylon",
+        filename: "file.obj",
         filepath: filePath,
         filetype: "image/jpeg",
       },
     ];
     
     uploadFiles({
-      toUrl: "http://192.168.3.129:8000/api/updating_scene/",
+      toUrl: "http://192.168.3.155:8000/api/updating_scene/",
       files: files,
       method: "POST",
       headers: {
         Accept: "application/json",
+        "x-api-key": "T9Uc5loPHR2VHPZ6jgpEzp40iLOLoDa9017wRdGf2uN7hLIoDsE0IU1vFT9XXmEU"
       },
       //invoked when the uploading starts.
       begin: () => {},
