@@ -336,11 +336,12 @@ const App = () => {
       (scene.activeCamera as ArcRotateCamera).noRotationConstraint = true;
       (scene.activeCamera as ArcRotateCamera).useNaturalPinchZoom = true;
       (scene.activeCamera as ArcRotateCamera).radius = 20;
+      (scene.activeCamera as ArcRotateCamera).maxZ = 2000;
 
       MainCamera = (scene.activeCamera as ArcRotateCamera);
 
 
-      skybox = MeshBuilder.CreateBox("skyBox", { size: 1000.0 }, scene);
+      skybox = MeshBuilder.CreateBox("skyBox", { size: 1500.0 }, scene);
       skybox.scaling.y = -1;
       var skyboxMaterial = new StandardMaterial("skyBox", scene);
       skyboxMaterial.backFaceCulling = false;
@@ -401,7 +402,7 @@ const App = () => {
           rotationgizmo.updateGizmoRotationToMatchAttachedMesh = false;
           rotationgizmo.updateGizmoPositionToMatchAttachedMesh = true;
         })
-      SceneLoader.Append(endPoint + "Deer1/", "elk.gltf", scene,
+      SceneLoader.Append(endPoint + "test_size/Deer1/", "elk_v2.gltf", scene,
         function (elk) {
           elk.meshes.forEach((value: AbstractMesh) => {
             if (value.name === "Deer1_primitive0") {
@@ -477,9 +478,9 @@ const App = () => {
   return (
     <View style={{ flex: 1 }}>
       < StatusBar barStyle="dark-content" />
-      < SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
-        <EngineView style={{ flex: 1 }} camera={camera} />
-      </SafeAreaView >
+      {/* < SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}> */}
+        <EngineView camera={camera} />
+      {/* </SafeAreaView > */}
 
       <View style={styles.centeredView}>
         <View style={transformType !== 9 && transformType !== 1 ? styles.modalView : { display: 'none' }}>
@@ -586,7 +587,11 @@ export default App;
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    padding: 10,
+    alignSelf:"center",
+    marginTop:680,
+    marginLeft:12,
+    position:"absolute",
+    // padding: 10,
   },
   toggleView: {
     width: 42,
@@ -618,8 +623,10 @@ const styles = StyleSheet.create({
   },
   containerOne: {
     flexDirection: "row",
-    padding: 10,
+    // padding: 10,
     display: "flex",
+    bottom:30,
+    alignSelf:"center",
   },
   btnImage: {
     width: "80%",
@@ -639,6 +646,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ddd",
     padding: 10,
     borderRadius: 5,
+    bottom:15,
   },
   buttonText: {
     fontWeight: 'bold',
