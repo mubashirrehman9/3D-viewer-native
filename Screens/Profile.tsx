@@ -5,7 +5,7 @@ import '@babylonjs/loaders/glTF';
 import { EngineView, useEngine } from '@babylonjs/react-native';
 import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, UtilityLayerRenderer, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo, SceneSerializer, AssetsManager, MeshAssetTask, CubeTexture, MeshBuilder } from '@babylonjs/core';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
-import { OBJExport } from 'babylonjs-serializers';
+// import { OBJExport } from 'babylonjs-serializers';
 // import { WebXRSessionManager, WebXRTrackingState } from '@babylonjs/core/XR';
 import RNFS from 'react-native-fs';
 import { float } from 'babylonjs';
@@ -41,7 +41,11 @@ var skybox: AbstractMesh
 var newX: float;
 var newY: float;
 var newZ: float;
+
+
 var endPoint: string = "http://192.168.45.134:5500/";
+
+var antlerPath : string = "models/android2/"
 
 
 interface Position {
@@ -380,7 +384,7 @@ const Profile = ({ navigation }) => {
             rotationgizmo = new RotationGizmo(utilLayer);
             scalegizmo = new ScaleGizmo(utilLayer);
 
-            SceneLoader.Append(endPoint + "antler/", "texturedMesh.gltf", scene,
+            SceneLoader.Append(endPoint + antlerPath, "texturedMesh.gltf", scene,
                 function () {
                     positionGizmo.scaleRatio = -2;
                     rotationgizmo.scaleRatio = 2;
