@@ -8,7 +8,7 @@ import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 // import { OBJExport } from 'babylonjs-serializers';
 // import { WebXRSessionManager, WebXRTrackingState } from '@babylonjs/core/XR';
 import RNFS from 'react-native-fs';
-import { float } from 'babylonjs';
+import { Material, float } from 'babylonjs';
 import { Alert, Modal, Pressable } from 'react-native';
 import { uploadFiles, DocumentDirectoryPath } from "react-native-fs";
 
@@ -55,7 +55,7 @@ interface Position {
 }
 
 //@ts-ignore
-const Profile = ({ navigation }) => {
+const Profile = ({route, navigation }) => {
     const engine = useEngine();
     const [camera, setCamera] = useState<Camera>();
     const [buttonState, setButtonState] = useState<number>(0);
@@ -64,6 +64,8 @@ const Profile = ({ navigation }) => {
     const [activespecies, setActiveSpecies] = useState<number>(1);
     const [objectPosition, setObjectPosition] = useState<Position>({ x: 0, y: 0, z: 0 });
     const [modalVisible, setModalVisible] = useState<boolean>(false);
+
+    antlerPath = `models/android${route.params.antlerPath}/`
 
     const handleTransformChange = (text: string, vector: string) => {
         if (vector === "x") {
@@ -181,12 +183,12 @@ const Profile = ({ navigation }) => {
     };
     function saveScene(filename: string, scene: Scene) {
         setModalVisible(true)
-        // var serializedScene = SceneSerializer.Serialize(scene);
-        // var strMesh = JSON.stringify(serializedScene);
-        // if (filename.toLowerCase().lastIndexOf(".babylon") !== filename.length - 8 || filename.length < 9) {
-        //   filename += ".babylon";
-        // }
-        // const filePath = `${RNFS.DownloadDirectoryPath}/${filename}`;
+        var serializedScene = SceneSerializer.Serialize(scene);
+        var strMesh = JSON.stringify(serializedScene);
+        if (filename.toLowerCase().lastIndexOf(".babylon") !== filename.length - 8 || filename.length < 9) {
+          filename += ".babylon";
+        }
+        const filePath = `${RNFS.DownloadDirectoryPath}/${filename}`;
 
         //     if (filename.toLowerCase().lastIndexOf(".obj") !== filename.length - 8 || filename.length < 9) {
         //         filename += ".obj";
@@ -197,29 +199,29 @@ const Profile = ({ navigation }) => {
         //     var strMesh = OBJExport.OBJ(MeshesToExport, false, "", true)
         //     // console.log(strMesh)
         //     const filePath = `${RNFS.DownloadDirectoryPath}/${filename}`;
-        //     RNFS.writeFile(filePath, strMesh, 'utf8')
-        //     var files = [
-        //         {
-        //             name: "file",
-        //             filename: "file.obj",
-        //             filepath: filePath,
-        //             filetype: "image/jpeg",
-        //         },
-        //     ];
+        RNFS.writeFile(filePath, strMesh, 'utf8')
+            var files = [
+                {
+                    name: "file",
+                    filename: "file.obj",
+                    filepath: filePath,
+                    filetype: "image/jpeg",
+                },
+            ];
 
-        //     uploadFiles({
-        //         toUrl: "http://192.168.3.155:8000/api/updating_scene/",
-        //         files: files,
-        //         method: "POST",
-        //         headers: {
-        //             Accept: "application/json",
-        //             "x-api-key": "T9Uc5loPHR2VHPZ6jgpEzp40iLOLoDa9017wRdGf2uN7hLIoDsE0IU1vFT9XXmEU"
-        //         },
-        //         //invoked when the uploading starts.
-        //         begin: () => { },
-        //         // You can use this callback to show a progress indicator.
-        //         progress: ({ totalBytesSent, totalBytesExpectedToSend }) => { },
-        //     });
+            uploadFiles({
+                toUrl: "http://192.168.3.155:8000/api/updating_scene/",
+                files: files,
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "x-api-key": "T9Uc5loPHR2VHPZ6jgpEzp40iLOLoDa9017wRdGf2uN7hLIoDsE0IU1vFT9XXmEU"
+                },
+                //invoked when the uploading starts.
+                begin: () => { },
+                // You can use this callback to show a progress indicator.
+                progress: ({ totalBytesSent, totalBytesExpectedToSend }) => { },
+            });
     }
 
 
@@ -341,7 +343,7 @@ const Profile = ({ navigation }) => {
             (scene.activeCamera as ArcRotateCamera).noRotationConstraint = true;
             (scene.activeCamera as ArcRotateCamera).useNaturalPinchZoom = true;
             (scene.activeCamera as ArcRotateCamera).radius = 20;
-
+            (scene.activeCamera as ArcRotateCamera).panningSensibility = 1;
             MainCamera = (scene.activeCamera as ArcRotateCamera);
 
 
@@ -349,7 +351,7 @@ const Profile = ({ navigation }) => {
             skybox.scaling.y = -1;
             var skyboxMaterial = new StandardMaterial("skyBox", scene);
             skyboxMaterial.backFaceCulling = false;
-            skyboxMaterial.reflectionTexture = new CubeTexture("http://localhost:8081/assets/textures/skybox/skybox", scene);
+            skyboxMaterial.reflectionTexture = new CubeTexture("http://localhost:8081/assets/textures/newskybox/skybox", scene);
             skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
             skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
             skyboxMaterial.specularColor = new Color3(0, 0, 0);
@@ -406,12 +408,14 @@ const Profile = ({ navigation }) => {
                     rotationgizmo.updateGizmoRotationToMatchAttachedMesh = false;
                     rotationgizmo.updateGizmoPositionToMatchAttachedMesh = true;
                 })
-            SceneLoader.Append(endPoint + "Deer1/", "elk.gltf", scene,
+            SceneLoader.Append(endPoint + "test_size/Deer1/", "elk.gltf", scene,
                 function (elk) {
                     elk.meshes.forEach((value: AbstractMesh) => {
+                        // value.setEnabled(false)
                         if (value.name === "Deer1_primitive0") {
                             elk_model = value
                         }
+
                     })
                     elk.meshes.forEach((value: AbstractMesh) => {
                         if (value.name === "Deer1_primitive1") {
@@ -481,7 +485,7 @@ const Profile = ({ navigation }) => {
 
     return (
         <View style={{ flex: 1 }}>
-            < StatusBar barStyle="dark-content" />
+            < StatusBar barStyle="default" />
             < SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
                 <EngineView style={{ flex: 1 }} camera={camera} />
             </SafeAreaView >
@@ -577,9 +581,9 @@ const Profile = ({ navigation }) => {
                 <TouchableOpacity style={styles.button} onPress={() => { saveScene("fileName", scene) }}>
                     <Text style={styles.buttonText}>Save</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={() => { loadScene("abc", "abc", scene) }}>
+                {/* <TouchableOpacity style={styles.button} onPress={() => { loadScene("abc", "abc", scene) }}>
                     <Text style={styles.buttonText}>Load</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <TouchableOpacity style={styles.button} onPress={() => { setShowSpeciesPanel(!showspeciesPanel) }}>
                     <Image style={styles.imageUp} source={require('../assets/textures/arrow_up_icon.png')} />
                 </TouchableOpacity>

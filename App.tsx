@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Home from './Screens/Home';
 import Profile from './Screens/Profile';
+import AntlerSelect from './Screens/AntlerSelect';
 
 const Stack = createNativeStackNavigator();
 
@@ -11,6 +12,7 @@ function App() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Home">
         <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen name="AntlerSelect" component={AntlerSelect} />
         <Stack.Screen name="Profile" component={Profile} />
       </Stack.Navigator>
     </NavigationContainer>

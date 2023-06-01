@@ -1,34 +1,23 @@
-import { Button, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Button, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React from 'react'
 
 // @ts-ignore
 const Home = ({ navigation }) => {
     return (
-        <View>
+        <View style={{ flex: 1, flexDirection: 'row' }}>
 
-        <View style={styles.startBtn}>
-            <TouchableOpacity style={styles.ImageBtn} onPress={() => navigation.navigate("Profile")}>
-                <Image style={styles.btnImage} source={require('../assets/textures/deerhorn.png')} />
-                <Text style={styles.buttonText}>Antler 1</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.ImageBtn} onPress={() => navigation.navigate("Profile")}>
-                <Image style={styles.btnImage} source={require('../assets/textures/deerhorn.png')} />
-                <Text style={styles.buttonText}>Antler 2</Text>
-            </TouchableOpacity>
-        </View>
-        <View style={styles.startBtn}>
-
-        <TouchableOpacity style={styles.ImageBtn} onPress={() => navigation.navigate("Profile")}>
-                <Image style={styles.btnImage} source={require('../assets/textures/deerhorn.png')} />
-                <Text style={styles.buttonText}>Antler 3</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.ImageBtn} onPress={() => navigation.navigate("Profile")}>
-                <Image style={styles.btnImage} source={require('../assets/textures/deerhorn.png')} />
-                <Text style={styles.buttonText}>Antler 4</Text>
-            </TouchableOpacity>
-        </View>
+            <ScrollView style={{ flex: 1 }}>
+                <View style={styles.startBtn}>
+                    {Array.from({
+                        length: 5
+                    }, (item, index) => {
+                        return (<TouchableOpacity style={styles.ImageBtn} onPress={() => navigation.navigate("AntlerSelect",{antlerPath:(index+1)})}>
+                            <Image style={styles.btnImage} source={require('../assets/textures/deerhorn.png')} />
+                            <Text style={styles.buttonText}>{"Antler" +(index+1)}</Text>
+                        </TouchableOpacity>)
+                    })}
+                </View>
+            </ScrollView>
         </View>
     )
 }
@@ -36,10 +25,11 @@ const Home = ({ navigation }) => {
 export default Home
 
 const styles = StyleSheet.create({
-    startBtn:{
-        padding:10,
-        flexDirection:"row",
-        alignSelf:"center",
+    startBtn: {
+        padding: 10,
+        // flexDirection: "row",
+        // alignSelf: "center",
+
     },
     ImageBtn: {
         marginLeft: 5,
@@ -47,6 +37,7 @@ const styles = StyleSheet.create({
         backgroundColor: "grey",
         width: 100,
         height: 90,
+        marginBottom: 10
     },
     btnImage: {
         width: "80%",
