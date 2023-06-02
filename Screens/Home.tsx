@@ -1,26 +1,29 @@
-import { Button, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React from 'react'
 
 // @ts-ignore
 const Home = ({ navigation }) => {
     return (
         <View style={{ flex: 1, flexDirection: 'row' }}>
-
             <ScrollView style={{ flex: 1 }}>
                 <View style={styles.startBtn}>
                     {Array.from({
                         length: 5
                     }, (item, index) => {
-                        return (<TouchableOpacity style={styles.ImageBtn} onPress={() => navigation.navigate("AntlerSelect",{antlerPath:(index+1)})}>
-                            <Image style={styles.btnImage} source={require('../assets/textures/deerhorn.png')} />
-                            <Text style={styles.buttonText}>{"Antler" +(index+1)}</Text>
-                        </TouchableOpacity>)
+                        const antlerPath = index + 1;
+                        return (
+                            <TouchableOpacity key={antlerPath} style={styles.ImageBtn} onPress={() => navigation.navigate("AntlerSelect", { antlerPath })}>
+                                <Image style={styles.btnImage} source={require('../assets/textures/deerhorn.png')} />
+                                <Text style={styles.buttonText}>{"Antler " + antlerPath}</Text>
+                            </TouchableOpacity>
+                        )
                     })}
                 </View>
             </ScrollView>
         </View>
     )
 }
+
 
 export default Home
 

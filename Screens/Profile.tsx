@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Image, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import '@babylonjs/loaders/glTF';
@@ -6,7 +6,7 @@ import { EngineView, useEngine } from '@babylonjs/react-native';
 import { Scene, Vector3, Mesh, ArcRotateCamera, Camera, PBRMetallicRoughnessMaterial, Color3, Color4, UtilityLayerRenderer, PositionGizmo, RotationGizmo, StandardMaterial, Texture, ScaleGizmo, SceneSerializer, AssetsManager, MeshAssetTask, CubeTexture, MeshBuilder } from '@babylonjs/core';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 // import { OBJExport } from 'babylonjs-serializers';
-// import { WebXRSessionManager, WebXRTrackingState } from '@babylonjs/core/XR';
+import { WebXRSessionManager, WebXRTrackingState } from '@babylonjs/core/XR';
 import RNFS from 'react-native-fs';
 import { Material, float } from 'babylonjs';
 import { Alert, Modal, Pressable } from 'react-native';
@@ -37,6 +37,7 @@ var deerViewIcon = require("../assets/textures/deer.png");
 // var antlerViewIcon = require("../assets/textures/antler_icon.png");
 // var deerViewIcon = require("../assets/textures/deer.png");
 var skybox: AbstractMesh
+var ground: AbstractMesh
 // var tempTransform: Vector3;
 var newX: float;
 var newY: float;
@@ -45,7 +46,7 @@ var newZ: float;
 
 var endPoint: string = "http://192.168.45.134:5500/";
 
-var antlerPath : string = "models/android2/"
+var antlerPath: string = "models/android2/"
 
 
 interface Position {
@@ -55,7 +56,7 @@ interface Position {
 }
 
 //@ts-ignore
-const Profile = ({route, navigation }) => {
+const Profile = ({ route, navigation }) => {
     const engine = useEngine();
     const [camera, setCamera] = useState<Camera>();
     const [buttonState, setButtonState] = useState<number>(0);
@@ -65,7 +66,44 @@ const Profile = ({route, navigation }) => {
     const [objectPosition, setObjectPosition] = useState<Position>({ x: 0, y: 0, z: 0 });
     const [modalVisible, setModalVisible] = useState<boolean>(false);
 
+    const [xrSession, setXrSession] = useState<WebXRSessionManager>();
+    const [trackingState, setTrackingState] = useState<WebXRTrackingState>();
+
     antlerPath = `models/android${route.params.antlerPath}/`
+
+    const onToggleXr = useCallback(() => {
+        (async () => {
+            if (xrSession) {
+                await xrSession.exitXRAsync();
+            } else {
+                if (scene !== undefined) {
+                    skybox.setEnabled(false)
+                    ground.setEnabled(false)
+                    const xr = await scene.createDefaultXRExperienceAsync({
+                        disableDefaultUI: true,
+                        disableTeleportation: true,
+                    });
+                    const session = await xr.baseExperience.enterXRAsync(
+                        'immersive-vr',
+                        'local-floor',
+                        xr.renderTarget,
+                    );
+                    setXrSession(session);
+                    session.onXRSessionEnded.add(() => {
+                        setXrSession(undefined);
+                        setTrackingState(undefined);
+                    });
+
+                    setTrackingState(xr.baseExperience.camera.trackingState);
+                    xr.baseExperience.camera.onTrackingStateChanged.add(
+                        newTrackingState => {
+                            setTrackingState(newTrackingState);
+                        },
+                    );
+                }
+            }
+        })();
+    }, [scene, xrSession]);
 
     const handleTransformChange = (text: string, vector: string) => {
         if (vector === "x") {
@@ -186,7 +224,7 @@ const Profile = ({route, navigation }) => {
         var serializedScene = SceneSerializer.Serialize(scene);
         var strMesh = JSON.stringify(serializedScene);
         if (filename.toLowerCase().lastIndexOf(".babylon") !== filename.length - 8 || filename.length < 9) {
-          filename += ".babylon";
+            filename += ".babylon";
         }
         const filePath = `${RNFS.DownloadDirectoryPath}/${filename}`;
 
@@ -200,28 +238,28 @@ const Profile = ({route, navigation }) => {
         //     // console.log(strMesh)
         //     const filePath = `${RNFS.DownloadDirectoryPath}/${filename}`;
         RNFS.writeFile(filePath, strMesh, 'utf8')
-            var files = [
-                {
-                    name: "file",
-                    filename: "file.obj",
-                    filepath: filePath,
-                    filetype: "image/jpeg",
-                },
-            ];
+        var files = [
+            {
+                name: "file",
+                filename: "file.obj",
+                filepath: filePath,
+                filetype: "image/jpeg",
+            },
+        ];
 
-            uploadFiles({
-                toUrl: "http://192.168.3.155:8000/api/updating_scene/",
-                files: files,
-                method: "POST",
-                headers: {
-                    Accept: "application/json",
-                    "x-api-key": "T9Uc5loPHR2VHPZ6jgpEzp40iLOLoDa9017wRdGf2uN7hLIoDsE0IU1vFT9XXmEU"
-                },
-                //invoked when the uploading starts.
-                begin: () => { },
-                // You can use this callback to show a progress indicator.
-                progress: ({ totalBytesSent, totalBytesExpectedToSend }) => { },
-            });
+        uploadFiles({
+            toUrl: "http://192.168.3.155:8000/api/updating_scene/",
+            files: files,
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "x-api-key": "T9Uc5loPHR2VHPZ6jgpEzp40iLOLoDa9017wRdGf2uN7hLIoDsE0IU1vFT9XXmEU"
+            },
+            //invoked when the uploading starts.
+            begin: () => { },
+            // You can use this callback to show a progress indicator.
+            progress: ({ totalBytesSent, totalBytesExpectedToSend }) => { },
+        });
     }
 
 
@@ -364,7 +402,7 @@ const Profile = ({route, navigation }) => {
             scene.lights[0].intensity = 2;
             scene.lights[0].shadowEnabled = true;
             const box = Mesh.CreateIcoSphere("box", { radius: 0.1 }, scene);
-            const ground = Mesh.CreateGround("ground", 50, 50, 50, scene)
+            ground = Mesh.CreateGround("ground", 50, 50, 50, scene)
 
             var groundMat = new StandardMaterial("groundMaterial", scene);
             var grounddiffuseTexture = new Texture("http://localhost:8081/assets/textures/ground_diff.jpg", scene);
@@ -584,7 +622,9 @@ const Profile = ({route, navigation }) => {
                 {/* <TouchableOpacity style={styles.button} onPress={() => { loadScene("abc", "abc", scene) }}>
                     <Text style={styles.buttonText}>Load</Text>
                 </TouchableOpacity> */}
-                <TouchableOpacity style={styles.button} onPress={() => { setShowSpeciesPanel(!showspeciesPanel) }}>
+                
+                {/* <TouchableOpacity style={styles.button} onPress={() => { setShowSpeciesPanel(!showspeciesPanel) }}> */}
+                <TouchableOpacity style={styles.button} onPress={onToggleXr}>
                     <Image style={styles.imageUp} source={require('../assets/textures/arrow_up_icon.png')} />
                 </TouchableOpacity>
             </View>
